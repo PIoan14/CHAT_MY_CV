@@ -8,9 +8,67 @@ st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
-if 'user_data' not in st.session_state:
-    st.session_state.user_data = {"user": "admin", "pass": "1234", "name": "Utilizator Demo"}
 
+
+# Determina link-ul dinamic catre sectiunea de chat
+chat_url = f"/chat?user={st.session_state.current_user}" if st.session_state.logged_in and st.session_state.current_user else "/chat"
+
+# --- NAVBAR NEGRU (Top Navigation) ---
+st.markdown(f"""
+<style>
+    .top-navbar {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: #000;
+        color: white;
+        padding: 15px 30px;
+        z-index: 999999;
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }}
+    .top-navbar a {{
+        color: white !important;
+        text-decoration: none;
+        font-weight: 600;
+        font-family: inherit;
+        margin-left: 20px;
+        font-size: 16px;
+        transition: color 0.2s ease;
+    }}
+    .top-navbar a:hover {{
+        color: #ffd21e !important;
+    }}
+    /* Ascunde header-ul standard Streamlit pentru a nu suprapune navbar-ul */
+    .stApp > header {{
+        display: none !important;
+    }}
+    .stApp {{
+        margin-top: 50px;
+    }}
+    /* Ascunde lista implicita de pagini Streamlit din sidebar */
+    [data-testid="stSidebarNav"] {{
+        display: none !important;
+    }}
+</style>
+<div class="top-navbar">
+    <a href="/" target="_self">🏠 Home</a>
+    <a href="{chat_url}" target="_self">💬 Chat</a>
+</div>
+""", unsafe_allow_html=True)
+
+# Ascunde complet sidebar-ul la login
+if not st.session_state.logged_in:
+    st.markdown("""
+    <style>
+        [data-testid="stSidebar"] {
+            display: none !important;
+        }
+    </style>
+    """, unsafe_allow_html=True)
 
 # --- INTERFAȚA DE LOGIN / REGISTER ---
 if not st.session_state.logged_in:
@@ -30,9 +88,14 @@ if not st.session_state.logged_in:
                     response = login_user(u, p)
                     if response.status_code == 200:
                         st.session_state.current_user = response.json()["logged_in_id"]
+                        st.session_state.current_user_name = response.json()["username"]
                         st.session_state.pdf_extracted_text = response.json()["CV_content"]
                         st.session_state.txt_extracted_text = response.json()["text_summary"]
                         st.session_state.logged_in = True
+                        if 'user_data' not in st.session_state:
+                            st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
+                        if 'current_user' not in st.session_state:
+                            st.session_state.current_user = ""
                         st.rerun()
                     else:
                         st.error("❌ Credentiale incorecte!")
@@ -78,97 +141,103 @@ else:
 
     # --- LOGICA PAGINILOR ---
     if selected == "Home":
+
         st.markdown(f"<h1>🤗 Bun venit, {st.session_state.user_data['name']}! 🎉</h1>", unsafe_allow_html=True)
-        st.markdown("<p style='font-size: 1.1rem; color: #64748b; margin-bottom: 2rem;'>Îți prezentăm noul spațiu de lucru modern și eficient. 💻✨</p>", unsafe_allow_html=True)
-        
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([6, 4])
         with col1:
-            st.info(f"👤 **Nume Utilizator:**\n\n{st.session_state.user_data['name']}")
-        with col2:
-            st.info(f"🔑 **Username / Cont:**\n\n{st.session_state.user_data['user']}")
-        
-
-        col1, col2 = st.columns(2)
-       
-        st.divider()
-        st.subheader("📄 PDF Text Extractor 🚀")
-        uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
-        
-        if st.button("✅ Submit PDF & Print to Console"):
-            if uploaded_file:
-                try:
-                    reader = pypdf.PdfReader(uploaded_file)
-                    full_text = ""
-                    for page in reader.pages:
-                        full_text += page.extract_text()
-                    
-                    print("\n--- CONTINUT PDF ---")
-                    print(full_text)
-
-                    update_user(st.session_state.current_user, "CV_content", full_text)
-                    print("--------------------\n")
-                    st.success("✅ Textul PDF-ului a fost trimis în consolă!")
-
-                    st.session_state.pdf_extracted_text = full_text
-
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Eroare la citirea PDF-ului: {e}")
-            else:
-                st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
-
             st.divider()
+            app_description = """
+            Upload your **CV in PDF format** and add a short **text summary with additional details** about your skills, experience, or projects.
+            The application will use this information to create an **AI-powered assistant** that can answer questions about your professional profile.
 
+            ### How it works
+            - 📄 Upload your **CV as a PDF**
+            - ✍️ Add a **short summary with extra information about your skills**
+            - 🤖 The system builds a **knowledge base for an AI assistant**
+            - 🔗 Receive a **unique chat link**
+            - 💬 Anyone with the link can **chat with the AI about your profile**
 
+            This makes it easy to **share your experience in an interactive way**, allowing others to explore your background through a simple conversation with AI.
+            """
+            st.markdown(app_description)
             
             
-            # # Sectiunea de editare pentru PDF
-            # if "pdf_extracted_text" not in st.session_state:
-            #     st.session_state.pdf_extracted_text = "Here should be your text"
-            
-        st.subheader("✏️ Editează textul extras din PDF:")
-        pdf_edited_text = st.text_area(".....", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor")
-        if st.button("💾 Change PDF Content"):
-            st.session_state.pdf_extracted_text = pdf_edited_text
-            update_user(st.session_state.current_user, "CV_content", pdf_edited_text)
-            st.success("✅ Conținutul PDF a fost actualizat!")
-            
+            #st.write("<p style='font-size: 1.1rem; color: #64748b; margin-top: 2rem;'><strong>Welcome to your intelligent workspace! ✨</strong><br> This application leverages fast text parsing and artificial intelligence algorithms to securely extract, structure, and edit information from your Resumes, CVs, and technical markdown documents in real time. Get started by uploading your files below.</p>", unsafe_allow_html=True)
+        with col2:
+            st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
 
         
-        st.divider()
-        st.subheader("📝 TXT Text Extractor 🚀")
-        uploaded_txt_file = st.file_uploader("📂 Încarcă un fisier markdown (.md)", type="md")
+        col1, col2 = st.columns(2)
         
-        if st.button("✅ Submit TXT & Print to Console"):
-            if uploaded_txt_file:
-                try:
-                    txt_full_text = uploaded_txt_file.getvalue().decode("utf-8")
-                    
-                    print("\n--- CONTINUT TXT ---")
-                    update_user(st.session_state.current_user, "text_summary", txt_full_text)
-                    print(txt_full_text)
-                    print("--------------------\n")
-                    st.success("✅ Textul fișierului TXT a fost trimis în consolă!")
-                    
-                    # Salveaza textul extras in session state pentru a fi editat
-                    st.session_state.txt_extracted_text = txt_full_text
-                except Exception as e:
-                    st.error(f"❌ Eroare la citirea TXT-ului: {e}")
-            else:
-                st.warning("⚠️ Te rog să încarci un fișier TXT înainte de a apăsa butonul!")
+        with col1:
+            st.divider()
+            st.subheader("📄 PDF Text Extractor 🚀")
+            with st.container(border=True):
+                uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
+            
+                if st.button("✅ Submit PDF & Print to Console"):
+                    if uploaded_file:
+                        try:
+                            reader = pypdf.PdfReader(uploaded_file)
+                            full_text = ""
+                            for page in reader.pages:
+                                full_text += page.extract_text()
+                            
+
+                            update_user(st.session_state.current_user, "CV_content", full_text)
+                            
+                            st.success("✅ Textul PDF-ului a fost trimis în consolă!")
+
+                            st.session_state.pdf_extracted_text = full_text
+
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Eroare la citirea PDF-ului: {e}")
+                    else:
+                        st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
+
+        with col2:
+            st.divider()
+            st.subheader("📝 Markdown/TXT Extractor 🚀")
+            with st.container(border=True):
+                uploaded_txt_file = st.file_uploader("📂 Încarcă un fisier markdown/text", type=["md", "txt"])
                 
+                if st.button("✅ Submit File & Print"):
+                    if uploaded_txt_file:
+                        try:
+                            txt_full_text = uploaded_txt_file.getvalue().decode("utf-8")
+                            
+                           
+                            update_user(st.session_state.current_user, "text_summary", txt_full_text)
+                            
+                            st.success("✅ Textul fișierului a fost trimis în consolă!")
+                            
+                            # Salveaza textul extras in session state pentru a fi editat
+                            st.session_state.txt_extracted_text = txt_full_text
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"❌ Eroare la citirea fișierului: {e}")
+                    else:
+                        st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
+                        
         st.divider()
-            
-        # Sectiunea de editare pentru TXT
-        # if "txt_extracted_text" not in st.session_state:
-        #     st.session_state.txt_extracted_text = ""
-            
-        st.subheader("✏️ Editează textul extras din TXT:")
-        txt_edited_text = st.text_area("...", value=st.session_state.txt_extracted_text, height=400, key="txt_editor")
-        if st.button("💾 Change TXT Content"):
-            st.session_state.txt_extracted_text = txt_edited_text
-            update_user(st.session_state.current_user, "text_summary", txt_edited_text)
-            st.success("✅ Conținutul TXT a fost actualizat!")
+        with st.expander("✏️ Editează textul extras din PDF:", expanded=False):
+            pdf_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor", label_visibility="collapsed")
+            if st.button("💾 Change PDF Content"):
+                st.session_state.pdf_extracted_text = pdf_edited_text
+                update_user(st.session_state.current_user, "CV_content", pdf_edited_text)
+                st.success("✅ Conținutul PDF a fost actualizat!")
+
+        st.divider()
+        with st.expander("✏️ Editează textul extras din Markdown/Text:", expanded=False):
+            txt_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.txt_extracted_text, height=400, key="txt_editor", label_visibility="collapsed")
+            if st.button("💾 Change TXT Content"):
+                st.session_state.txt_extracted_text = txt_edited_text
+                update_user(st.session_state.current_user, "text_summary", txt_edited_text)
+                st.success("✅ Conținutul TXT/MD a fost actualizat!")
+
+        st.divider()
+        #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png", use_container_width=True)
 
     elif selected == "Analytics":
         st.title("📈📊 Analytics Dashboard 🚀✨")
