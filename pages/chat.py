@@ -1,4 +1,5 @@
 import streamlit as st
+from server_calls import chat_RAG_llm
 
 st.set_page_config(page_title="Chat", layout="wide", page_icon="💬")
 
@@ -46,21 +47,22 @@ st.markdown("""
 
 # Verifică dacă există un user_id în parametrii URL-ului (pentru ruta dinamică /chat?user=ID)
 current_chat_user = st.query_params.get("user")
+current_chat_username = st.query_params.get("username", current_chat_user)
 
 if not current_chat_user:
-    st.warning("⚠️ Chat-ul nu a putut fi identificat. Te rugăm să accesezi un link valid de chat (ex: /chat?user=Nume).")
+    st.warning("⚠️ Chat-ul nu a putut fi identificat. Te rugăm să accesezi un link valid de chat (ex: /chat?user=ID&username=Nume).")
     st.markdown('<a href="/" target="_self">Întoarce-te la Home 🏠</a>', unsafe_allow_html=True)
     st.stop() # Opresste executia restului paginii
 
 # Continutul paginii Chat pentru vizitatorii acestei rute dinamice
-st.title(f"👤 Chat cu Asistentul lui {current_chat_user} 💬")
-st.markdown(f"Pune întrebări agentului AI instruit special pe documentele lui **{current_chat_user}**.")
+st.title(f"👤 Chat cu Asistentul lui {current_chat_username} 💬")
+st.markdown(f"Pune întrebări agentului AI instruit special pe documentele lui **{current_chat_username}**.")
 
 # Initializarea istoricului de chat in session_state, specific acestui user, daca nu exista
 chat_history_key = f"chat_history_{current_chat_user}"
 if chat_history_key not in st.session_state:
     st.session_state[chat_history_key] = [
-        {"role": "assistant", "content": f"Salut! Sunt asistentul AI al lui {current_chat_user}. Cu ce te pot ajuta?"}
+        {"role": "assistant", "content": f"Salut! Sunt asistentul AI al lui {current_chat_username}. Cu ce te pot ajuta?"}
     ]
 
 # Lista de raspunsuri moc primite "de la LLM"
@@ -98,7 +100,7 @@ if prompt := st.chat_input("Scrie un mesaj aici..."):
         
         # Luam un raspuns din lista
         current_index = st.session_state[mock_index_key]
-        response_text = mock_responses[current_index]
+        response_text = chat_RAG_llm(current_chat_user, prompt)
         
         # Crestem indexul pentru urmatorul mesaj (si o luam de la capat daca e cazul)
         st.session_state[mock_index_key] = (current_index + 1) % len(mock_responses)

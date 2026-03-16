@@ -9,9 +9,14 @@ st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 
+import urllib.parse
 
 # Determina link-ul dinamic catre sectiunea de chat
-chat_url = f"/chat?user={st.session_state.current_user}" if st.session_state.logged_in and st.session_state.current_user else "/chat"
+if st.session_state.logged_in and st.session_state.current_user:
+    username_safe = urllib.parse.quote(st.session_state.get('user_data', {}).get('name', st.session_state.current_user))
+    chat_url = f"/chat?user={st.session_state.current_user}&username={username_safe}"
+else:
+    chat_url = "/"
 
 # --- NAVBAR NEGRU (Top Navigation) ---
 st.markdown(f"""
@@ -49,6 +54,12 @@ st.markdown(f"""
     .stApp {{
         margin-top: 50px;
     }}
+    
+    /* Ridica continutul mai sus ca sa nu fie gap mare dupa Navbar */
+    .block-container {{
+        padding-top: 1.5rem !important;
+    }}
+
     /* Ascunde lista implicita de pagini Streamlit din sidebar */
     [data-testid="stSidebarNav"] {{
         display: none !important;
@@ -92,8 +103,8 @@ if not st.session_state.logged_in:
                         st.session_state.pdf_extracted_text = response.json()["CV_content"]
                         st.session_state.txt_extracted_text = response.json()["text_summary"]
                         st.session_state.logged_in = True
-                        if 'user_data' not in st.session_state:
-                            st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
+                        #if 'user_data' not in st.session_state:
+                        st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
                         if 'current_user' not in st.session_state:
                             st.session_state.current_user = ""
                         st.rerun()
@@ -106,18 +117,33 @@ if not st.session_state.logged_in:
                 new_p = st.text_input("🔒 New Password", type="password")
                 reg_submit = st.form_submit_button("Register ✨", use_container_width=True)
                 if reg_submit:
+                    
                     if register_user(new_u, new_p) != 400:
                         st.success("✅ Cont înregistrat! Verifică consola.")
                         response = login_user(new_u, new_p)
                         if response.status_code == 200:
+
                             st.session_state.current_user = response.json()["logged_in_id"]
+                            st.session_state.current_user_name = response.json()["username"]
                             st.session_state.pdf_extracted_text = response.json()["CV_content"]
-                            st.session_state.text_extracted_text = response.json()["text_summary"]
-                            
+                            st.session_state.txt_extracted_text = response.json()["text_summary"]
                             st.session_state.logged_in = True
+                            st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
+                            if 'current_user' not in st.session_state:
+                                st.session_state.current_user = ""
                             st.rerun()
                         else:
-                            st.warning("⚠️ Username or password already exists!")
+                            st.error("❌ Credentiale incorecte!")
+                        #     if 'user_data' not in st.session_state:
+                        #         st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
+                        #     st.session_state.current_user = response.json()["logged_in_id"]
+                        #     st.session_state.pdf_extracted_text = response.json()["CV_content"]
+                        #     st.session_state.text_extracted_text = response.json()["text_summary"]
+                            
+                        #     st.session_state.logged_in = True
+                        #     st.rerun()
+                        # else:
+                        #     st.warning("⚠️ Username or password already exists!")
                     
 
 # --- INTERFAȚA PRINCIPALĂ (DUPĂ LOGIN) ---
@@ -142,37 +168,66 @@ else:
     # --- LOGICA PAGINILOR ---
     if selected == "Home":
 
-        st.markdown(f"<h1>🤗 Bun venit, {st.session_state.user_data['name']}! 🎉</h1>", unsafe_allow_html=True)
+        st.markdown(f"<h1>Welcome, {st.session_state.user_data['name']}! 🎉</h1>", unsafe_allow_html=True)
         col1, col2 = st.columns([6, 4])
         with col1:
-            st.divider()
-            app_description = """
-            Upload your **CV in PDF format** and add a short **text summary with additional details** about your skills, experience, or projects.
-            The application will use this information to create an **AI-powered assistant** that can answer questions about your professional profile.
-
-            ### How it works
-            - 📄 Upload your **CV as a PDF**
-            - ✍️ Add a **short summary with extra information about your skills**
-            - 🤖 The system builds a **knowledge base for an AI assistant**
-            - 🔗 Receive a **unique chat link**
-            - 💬 Anyone with the link can **chat with the AI about your profile**
-
-            This makes it easy to **share your experience in an interactive way**, allowing others to explore your background through a simple conversation with AI.
+            #st.divider()
+            
+            # CSS pre-definit pentru o structură card-like responsive (Bootstrap-like)
+            css_stil_carduri = """
+            <style>
+                .bs-card {
+                    background-color: var(--background-color);
+                    border-radius: 8px;
+                    border: 1px solid rgba(128, 128, 128, 0.2);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    padding: 20px;
+                    margin-bottom: 20px;
+                    color: var(--text-color);
+                }
+            </style>
             """
-            st.markdown(app_description)
+            
+            st.markdown(css_stil_carduri, unsafe_allow_html=True)
+            
+            # Textul impartit in doua carduri
+            card_1 = """
+            <div class="bs-card">
+                <p style="font-size: 16px; margin-bottom: 0;">Upload your <b>CV in PDF format</b> and add a short <b>text summary with additional details</b> about your skills, experience, or projects. <br>The application will use this information to create an <b>AI-powered assistant</b> that can answer questions about your professional profile.</p>
+            </div>
+            """
+            
+            card_2 = """
+            <div class="bs-card">
+                <h4 style="margin-top: 0; margin-bottom: 12px;">⚙️ How it works</h4>
+                <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
+                    <li>📄 Upload your <b>CV as a PDF</b></li>
+                    <li>✍️ Add a <b>short summary with extra information about your skills</b></li>
+                    <li>🤖 The system builds a <b>knowledge base for an AI assistant</b></li>
+                    <li>🔗 Receive a <b>unique chat link</b></li>
+                    <li>💬 Anyone with the link can <b>chat with the AI about your profile</b></li>
+                </ul>
+                <p>This makes it easy to <b>share your experience in an interactive way</b>, allowing others to explore your background through a simple conversation with AI.</p>
+            </div>
+            """
+            
+            st.markdown(card_1, unsafe_allow_html=True)
+            st.markdown(card_2, unsafe_allow_html=True)
             
             
             #st.write("<p style='font-size: 1.1rem; color: #64748b; margin-top: 2rem;'><strong>Welcome to your intelligent workspace! ✨</strong><br> This application leverages fast text parsing and artificial intelligence algorithms to securely extract, structure, and edit information from your Resumes, CVs, and technical markdown documents in real time. Get started by uploading your files below.</p>", unsafe_allow_html=True)
         with col2:
             st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
 
-        
+        st.info(f"Your url : {chat_url}")
+        st.divider()
         col1, col2 = st.columns(2)
         
         with col1:
-            st.divider()
-            st.subheader("📄 PDF Text Extractor 🚀")
+            #st.divider()
+            #st.subheader("📄 PDF Text Extractor 🚀")
             with st.container(border=True):
+                st.subheader("📄 PDF Text Extractor 🚀")
                 uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
             
                 if st.button("✅ Submit PDF & Print to Console"):
@@ -190,16 +245,16 @@ else:
 
                             st.session_state.pdf_extracted_text = full_text
 
-                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Eroare la citirea PDF-ului: {e}")
                     else:
                         st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
 
         with col2:
-            st.divider()
-            st.subheader("📝 Markdown/TXT Extractor 🚀")
+            #st.divider()
+
             with st.container(border=True):
+                st.subheader("📝 Markdown/TXT Extractor 🚀")
                 uploaded_txt_file = st.file_uploader("📂 Încarcă un fisier markdown/text", type=["md", "txt"])
                 
                 if st.button("✅ Submit File & Print"):
@@ -214,13 +269,13 @@ else:
                             
                             # Salveaza textul extras in session state pentru a fi editat
                             st.session_state.txt_extracted_text = txt_full_text
-                            st.rerun()
                         except Exception as e:
                             st.error(f"❌ Eroare la citirea fișierului: {e}")
                     else:
                         st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
                         
-        st.divider()
+        st.subheader("Edit area:")
+        st.text("In the case of the first upload of some documents, you will be able to see the extracted content after you refresh the page!")
         with st.expander("✏️ Editează textul extras din PDF:", expanded=False):
             pdf_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor", label_visibility="collapsed")
             if st.button("💾 Change PDF Content"):
@@ -228,7 +283,7 @@ else:
                 update_user(st.session_state.current_user, "CV_content", pdf_edited_text)
                 st.success("✅ Conținutul PDF a fost actualizat!")
 
-        st.divider()
+        #st.divider()
         with st.expander("✏️ Editează textul extras din Markdown/Text:", expanded=False):
             txt_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.txt_extracted_text, height=400, key="txt_editor", label_visibility="collapsed")
             if st.button("💾 Change TXT Content"):
@@ -265,39 +320,53 @@ else:
     elif selected == "Settings":
         st.title("⚙️🛠️ Setări Platformă 🛡️")
         
-        tab_pref, tab_cont = st.tabs(["🎨 Preferințe", "🔐 Securitate Cont"])
+        #tab_cont = st.tabs(["🔐 Securitate Cont"])
         
-        with tab_pref:
-            st.subheader("🔔 Preferințe Notificări")
-            st.checkbox("📧 Notificări pe email pentru noutăți", value=True)
-            st.checkbox("🛡️ Alerte de securitate (recomandat)", value=True)
+        # with tab_pref:
+        #     st.subheader("🔔 Preferințe Notificări")
+        #     st.checkbox("📧 Notificări pe email pentru noutăți", value=True)
+        #     st.checkbox("🛡️ Alerte de securitate (recomandat)", value=True)
             
-            st.divider()
-            st.subheader("🎨 Personalizare")
-            st.color_picker("Alege culoarea de accent (În curând) 🖌️", value="#ffd21e")
+        #     st.divider()
+        #     st.subheader("🎨 Personalizare")
+        #     st.color_picker("Alege culoarea de accent (În curând) 🖌️", value="#ffd21e")
 
-        with tab_cont:
-            st.subheader("🔐 Modifică Datele de Autentificare")
-            st.info("💡 Aici îți poți schimba numele de utilizator și parola contului curent.")
+        #with tab_cont:
+        st.subheader("🔐 Modifică Datele de Autentificare")
+        st.info("💡 Aici îți poți schimba numele de utilizator și parola contului curent.")
+        
+        st.divider()
+        st.subheader("👤 Username change ")
+        with st.form("change_username_form"):
+            current_username = st.session_state.user_data['name']
             
-            with st.form("change_credentials_form"):
-                current_username = st.session_state.user_data['user']
-                
-                new_username = st.text_input("👤 Noul Username", value=current_username)
-                new_password = st.text_input("🔑 Noua Parolă", type="password", placeholder="Introdu noua parolă (lasă gol pentru a nu o schimba)")
-                confirm_password = st.text_input("🔄 Confirmă Noua Parolă", type="password", placeholder="Repetă parola...")
-                
-                submit_creds = st.form_submit_button("💾 Salvează Modificările", use_container_width=True)
-                
-                if submit_creds:
-                    if new_password != confirm_password:
-                        st.error("❌ Parolele introduse nu coincid! Încearcă din nou.")
-                    elif len(new_password) > 0 and len(new_password) < 4:
-                         st.error("❌ Parola nouă trebuie să aibă cel puțin 4 caractere.")
-                    else:
-                        st.session_state.user_data['user'] = new_username
-                        if new_password != "":
-                            st.session_state.user_data['pass'] = new_password
-                            
-                        st.success("✅ Datele de autentificare au fost actualizate cu succes!")
-                        st.rerun()
+            new_username = st.text_input("👤 Noul Username", value=current_username)
+            
+            submit_creds = st.form_submit_button("💾 Salvează Modificările", use_container_width=True)
+
+            if submit_creds:
+                if new_username != "":
+                    update_user(st.session_state.current_user, "username", new_username)
+                    
+                    st.session_state.user_data['name'] = new_username
+                    st.success("✅ Numele de utilizator a fost actualizat!")
+            
+        st.divider()
+        st.subheader("🔒 Password change ")
+        with st.form("change_password_form"):
+            new_password = st.text_input("🔑 Noua Parolă", type="password", placeholder="Introdu noua parolă (lasă gol pentru a nu o schimba)")
+
+            confirm_password = st.text_input("🔄 Confirmă Noua Parolă", type="password", placeholder="Repetă parola...")
+            
+            submit_creds = st.form_submit_button("💾 Salvează Modificările", use_container_width=True)
+            
+            if submit_creds:
+                if new_password != confirm_password:
+                    st.error("❌ Parolele introduse nu coincid! Încearcă din nou.")
+                else:
+                    if new_password != "":
+                        update_user(st.session_state.current_user, "password", new_password)
+                        st.session_state.user_data['pass'] = new_password
+                        
+                    st.success("✅ Datele de autentificare au fost actualizate cu succes!")
+                   

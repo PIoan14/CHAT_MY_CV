@@ -4,6 +4,24 @@ import logging
 
 LOGGER = logging.getLogger(__name__)
 
+
+def chat_RAG_llm(user_id, question):
+
+    headers = {
+    'accept': 'application/json',
+    'content-type': 'application/x-www-form-urlencoded',
+    }
+    params = {
+        'doc_id': user_id,
+        'question': question,
+    }
+
+    try:
+        response = requests.post('http://127.0.0.1:8000/chatCompletions', params=params, headers=headers)
+        return response.json()["message"]
+    except Exception as e:
+        LOGGER.error(f"Error in chat_RAG_llm: {e}")
+
 def login_user(username, password):
 
     headers = {
