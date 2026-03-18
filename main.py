@@ -134,24 +134,12 @@ if not st.session_state.logged_in:
                             st.rerun()
                         else:
                             st.error("❌ Credentiale incorecte!")
-                        #     if 'user_data' not in st.session_state:
-                        #         st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
-                        #     st.session_state.current_user = response.json()["logged_in_id"]
-                        #     st.session_state.pdf_extracted_text = response.json()["CV_content"]
-                        #     st.session_state.text_extracted_text = response.json()["text_summary"]
-                            
-                        #     st.session_state.logged_in = True
-                        #     st.rerun()
-                        # else:
-                        #     st.warning("⚠️ Username or password already exists!")
                     
-
-# --- INTERFAȚA PRINCIPALĂ (DUPĂ LOGIN) ---
 else:
     # Sidebar cu meniu frumos
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
-        st.markdown(f"### 👋 Salut, {st.session_state.user_data['name']}! 🌟")
+        st.markdown(f"### 👋 Hello, {st.session_state.user_data['name']}! 🌟")
         
         selected = option_menu(
             menu_title="Main Menu 🚀",
@@ -168,8 +156,8 @@ else:
     # --- LOGICA PAGINILOR ---
     if selected == "Home":
 
-        st.markdown(f"<h1>Welcome, {st.session_state.user_data['name']}! 🎉</h1>", unsafe_allow_html=True)
-        col1, col2 = st.columns([6, 4])
+        st.markdown(f"<h1>Welcome, {st.session_state.user_data['name']}! 👋🎉</h1>", unsafe_allow_html=True)
+        col1, col2 = st.columns([5, 5])
         with col1:
             #st.divider()
             
@@ -210,69 +198,159 @@ else:
                 <p>This makes it easy to <b>share your experience in an interactive way</b>, allowing others to explore your background through a simple conversation with AI.</p>
             </div>
             """
+
+            card_3 = """
+                <div class="bs-card">
+                    <h4 style="margin-top: 0; margin-bottom: 12px;">✨ What you can highlight</h4>
+                    <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
+                        <li>🧠 Your <b>technical skills and technologies</b> (e.g. Python, AI, Web)</li>
+                        <li>🚀 <b>Projects or products</b> you’ve worked on</li>
+                        <li>💼 <b>Professional experience</b> and responsibilities</li>
+                        <li>🏆 <b>Certifications</b> and achievements</li>
+                        <li>🌱 <b>Personal interests</b> or areas you're currently learning</li>
+                    </ul>
+                    <p>This helps the AI provide <b>more accurate and personalized answers</b> about your profile.</p>
+                </div>
+                """
+
+            card_4 = """
+            <div class="bs-card">
+                <h4 style="margin-top: 0; margin-bottom: 12px;">🚀 Why use it</h4>
+                <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
+                    <li>🤖 Turn your CV into an <b>interactive AI experience</b></li>
+                    <li>⚡ Let others quickly <b>understand your profile</b> without reading long documents</li>
+                    <li>📢 <b>Stand out</b> in interviews or job applications</li>
+                    <li>🌐 Easily <b>share your profile</b> with a simple link</li>
+                    <li>💬 Enable <b>real-time Q&A</b> about your skills and experience</li>
+                </ul>
+                <p>A modern way to present yourself — more engaging than a traditional CV.</p>
+            </div>
+            """
             
             st.markdown(card_1, unsafe_allow_html=True)
             st.markdown(card_2, unsafe_allow_html=True)
-            
+            # st.markdown(card_3, unsafe_allow_html=True)
+            # st.markdown(card_4, unsafe_allow_html=True)
             
             #st.write("<p style='font-size: 1.1rem; color: #64748b; margin-top: 2rem;'><strong>Welcome to your intelligent workspace! ✨</strong><br> This application leverages fast text parsing and artificial intelligence algorithms to securely extract, structure, and edit information from your Resumes, CVs, and technical markdown documents in real time. Get started by uploading your files below.</p>", unsafe_allow_html=True)
         with col2:
-            st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
 
-        st.info(f"Your url : {chat_url}")
+            #st.markdown(card_3, unsafe_allow_html=True)
+            st.divider()
+            st.markdown(card_4, unsafe_allow_html=True)
+            with st.expander("🔗 Check your CV Chat url : ", expanded=False):
+                st.code("http://localhost:8501"+f"{chat_url}")
+            
+            with st.expander("What you can highlight...: ", expanded=False):
+                st.markdown(card_3, unsafe_allow_html=True)
+            
+            # st.markdown(
+            #     "<div style='text-align:center; font-size:100px;'>📄➞💬</div>",
+            #     unsafe_allow_html=True
+            # )
+            
+            #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
+
+        # st.info(f"Your url : {chat_url}")
+
+        #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
+
+
         st.divider()
+        import pandas as pd
+        import numpy as np
+        import matplotlib.pyplot as plt
+        import streamlit as st
+        from collections import Counter
+        import re
+
+        import streamlit as st
+        import re
+        from collections import Counter
+
+
+        # if st.session_state.pdf_extracted_text:
+        #     # Curățăm textul: păstrăm doar cuvinte
+        #     words = re.findall(r'\b\w+\b', st.session_state.pdf_extracted_text)
+
+        #     word_lengths = [len(word) for word in words]
+
+        #     # Numărăm câte apariții are fiecare lungime
+        #     length_counts = Counter(word_lengths)
+
+        #     # Pregătim datele pentru Streamlit
+        #     hist_data = {str(length): count for length, count in sorted(length_counts.items())}
+
+        #     st.subheader("Histogramă lungime cuvinte")
+        #     st.bar_chart(hist_data)
+
+        
+        # st.markdown("### Your CV Chat url : ")
+        # col1, col2 = st.columns([5, 5])
+        # with col1:
+        #     with st.expander("🔗 Check your CV Chat url : ", expanded=False):
+        #         st.code("http://localhost:8501"+f"{chat_url}")
+        # with col2:
+        #     with st.expander("What you can highlight...: ", expanded=False):
+        #         st.markdown(card_3, unsafe_allow_html=True)
+        # st.divider()
+        st.subheader("Upload area:")
         col1, col2 = st.columns(2)
         
         with col1:
             #st.divider()
             #st.subheader("📄 PDF Text Extractor 🚀")
-            with st.container(border=True):
-                st.subheader("📄 PDF Text Extractor 🚀")
-                uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
-            
-                if st.button("✅ Submit PDF & Print to Console"):
-                    if uploaded_file:
-                        try:
-                            reader = pypdf.PdfReader(uploaded_file)
-                            full_text = ""
-                            for page in reader.pages:
-                                full_text += page.extract_text()
-                            
 
-                            update_user(st.session_state.current_user, "CV_content", full_text)
-                            
-                            st.success("✅ Textul PDF-ului a fost trimis în consolă!")
+            with st.expander("📄 PDF Text Extractor 🚀", expanded=False):
+                with st.container(border=True):
+                    st.subheader("📄 PDF Text Extractor 🚀")
+                    uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
+                
+                    if st.button("✅ Submit PDF & Print to Console"):
+                        if uploaded_file:
+                            try:
+                                reader = pypdf.PdfReader(uploaded_file)
+                                full_text = ""
+                                for page in reader.pages:
+                                    full_text += page.extract_text()
+                                
 
-                            st.session_state.pdf_extracted_text = full_text
+                                update_user(st.session_state.current_user, "CV_content", full_text)
+                                
+                                st.success("✅ Textul PDF-ului a fost trimis în consolă!")
 
-                        except Exception as e:
-                            st.error(f"❌ Eroare la citirea PDF-ului: {e}")
-                    else:
-                        st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
+                                st.session_state.pdf_extracted_text = full_text
+
+                            except Exception as e:
+                                st.error(f"❌ Eroare la citirea PDF-ului: {e}")
+                        else:
+                            st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
 
         with col2:
             #st.divider()
 
-            with st.container(border=True):
-                st.subheader("📝 Markdown/TXT Extractor 🚀")
-                uploaded_txt_file = st.file_uploader("📂 Încarcă un fisier markdown/text", type=["md", "txt"])
-                
-                if st.button("✅ Submit File & Print"):
-                    if uploaded_txt_file:
-                        try:
-                            txt_full_text = uploaded_txt_file.getvalue().decode("utf-8")
+            with st.expander("� Markdown/TXT Extractor 🚀", expanded=False):
+
+                with st.container(border=True):
+                    st.subheader("📝 Markdown/TXT Extractor 🚀")
+                    uploaded_txt_file = st.file_uploader("📂 Încarcă un fisier markdown/text", type=["md", "txt"])
+                    
+                    if st.button("✅ Submit File & Print"):
+                        if uploaded_txt_file:
+                            try:
+                                txt_full_text = uploaded_txt_file.getvalue().decode("utf-8")
+                                
                             
-                           
-                            update_user(st.session_state.current_user, "text_summary", txt_full_text)
-                            
-                            st.success("✅ Textul fișierului a fost trimis în consolă!")
-                            
-                            # Salveaza textul extras in session state pentru a fi editat
-                            st.session_state.txt_extracted_text = txt_full_text
-                        except Exception as e:
-                            st.error(f"❌ Eroare la citirea fișierului: {e}")
-                    else:
-                        st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
+                                update_user(st.session_state.current_user, "text_summary", txt_full_text)
+                                
+                                st.success("✅ Textul fișierului a fost trimis în consolă!")
+                                
+                                # Salveaza textul extras in session state pentru a fi editat
+                                st.session_state.txt_extracted_text = txt_full_text
+                            except Exception as e:
+                                st.error(f"❌ Eroare la citirea fișierului: {e}")
+                        else:
+                            st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
                         
         st.subheader("Edit area:")
         st.text("In the case of the first upload of some documents, you will be able to see the extracted content after you refresh the page!")
