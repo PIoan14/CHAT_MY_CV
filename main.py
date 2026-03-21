@@ -182,126 +182,240 @@ else:
             </style>
             """
 
-        st.markdown(f"<div class='bs-card'><h2>Welcome, {st.session_state.user_data['name']}! 👋🎉</h2></div>", unsafe_allow_html=True)
-        col1, col2 = st.columns([5, 5])
-        with col1:
-            #st.divider()
-            
-            # CSS pre-definit pentru o structură card-like responsive (Bootstrap-like)
-            css_stil_carduri = """
-            <style>
-                .bs-card {
-                    background-color: var(--background-color);
-                    border-radius: 8px;
-                    border: 1px solid rgba(128, 128, 128, 0.2);
-                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-                    padding: 20px;
-                    margin-bottom: 20px;
-                    color: var(--text-color);
-                }
-            </style>
-            """
-            
-            st.markdown(css_stil_carduri, unsafe_allow_html=True)
-            
-            # Textul impartit in doua carduri
-            card_1 = """
-            <div class="bs-card">
-                <p style="font-size: 16px; margin-bottom: 0;">Upload your <b>CV in PDF format</b> and add a short <b>text summary with additional details</b> about your skills, experience, or projects. <br>The application will use this information to create an <b>AI-powered assistant</b> that can answer questions about your professional profile.</p>
-            </div>
-            """
-            
-            card_2 = """
-            <div class="bs-card">
-                <h4 style="margin-top: 0; margin-bottom: 12px;">⚙️ How it works</h4>
-                <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
-                    <li>📄 Upload your <b>CV as a PDF</b></li>
-                    <li>✍️ Add a <b>short summary with extra information about your skills</b></li>
-                    <li>🤖 The system builds a <b>knowledge base for an AI assistant</b></li>
-                    <li>🔗 Receive a <b>unique chat link</b></li>
-                    <li>💬 Anyone with the link can <b>chat with the AI about your profile</b></li>
-                </ul>
-                <p>This makes it easy to <b>share your experience in an interactive way</b>, allowing others to explore your background through a simple conversation with AI.</p>
-            </div>
-            """
+        # Titlu mai mic, neincadrat in card
+        #st.markdown(f"<h3 style='margin-bottom: 0;'>Welcome, {st.session_state.user_data['name']}! 👋🎉</h3>", unsafe_allow_html=True)
+        
+        # Paragraf stilizat descriptiv despre aplicatie, cu emoji-uri si design premium
+        st.markdown(f"""
+        <div style='background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(200, 225, 255, 0.95) 100%); 
+                    backdrop-filter: blur(4px);
+                    padding: 18px 25px; 
+                    border-radius: 12px; 
+                    border-left: 5px solid #0f265c;
+                    margin-top: 15px;
+                    margin-bottom: 25px; 
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+                    color: #0f265c; 
+                    font-size: 1.05rem; 
+                    line-height: 1.6;
+                    font-weight: 500;'>
+                <h3 style='margin-bottom: 0;'>Welcome, {st.session_state.user_data['name']}! 👋🎉</h3>
+            ✨ <strong>Transform your standard CV into a powerful AI-driven interactive experience!</strong> 🚀<br> 
+            Simply upload your document 📄, highlight your best skills 💡, and our intelligent engine 🤖 will craft a personalized knowledge base instantly. Generate your unique link 🔗 and share it with recruiters so they can chat directly with your virtual profile and discover why you're the perfect fit! 🎯
+        </div>
+        """, unsafe_allow_html=True)
+        st.divider()
+        
+        # CSS pentru cardurile rotative (inaltime redusa la jumatate)
+        css_stil_carduri = """
+        <style>
+            .flip-card {
+                background-color: transparent;
+                width: 100%;
+                height: 150px; /* Inaltime redusa considerabil */
+                perspective: 1000px;
+                cursor: pointer;
+                margin-bottom: 25px;
+                display: block;
+            }
+            .flip-card-inner {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                text-align: center;
+                transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+                transform-style: preserve-3d;
+            }
+            .flip-card input[type="checkbox"] {
+                display: none;
+            }
+            .flip-card input[type="checkbox"]:checked ~ .flip-card-inner {
+                transform: rotateY(180deg);
+            }
+            .flip-card-front, .flip-card-back {
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                backface-visibility: hidden;
+                border-radius: 16px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                padding: 10px 15px; /* Padding mai mic si optimizat */
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                border: 1px solid rgba(255,255,255,0.08);
+            }
+            .flip-card-front {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(200, 225, 255, 0.95) 100%);
+                backdrop-filter: blur(8px);
+                color: #0f265c;
+            }
+            .flip-card-front h3 {
+                margin: 0;
+                font-size: 1rem;
+                font-weight: 600;
+                font-family: inherit;
+                line-height: 1.2;
+            }
+            .flip-card-front .icon {
+                font-size: 1.8rem;
+                margin-bottom: 8px;
+            }
+            .flip-card-front .flip-btn {
+                margin-top: auto;
+                border: 1px solid rgba(15, 38, 92, 0.25);
+                background: rgba(15, 38, 92, 0.05);
+                color: #0f265c;
+                padding: 2px 10px;
+                border-radius: 20px;
+                font-weight: 600;
+                font-size: 0.7rem;
+                transition: all 0.3s;
+                display: inline-block;
+            }
+            .flip-card-back {
+                background: linear-gradient(135deg, rgba(235, 245, 255, 0.95) 0%, rgba(175, 205, 255, 0.95) 100%);
+                color: #222;
+                transform: rotateY(180deg);
+                backdrop-filter: blur(8px);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 10px;
+            }
 
-            card_3 = """
-                <div class="bs-card">
-                    <h4 style="margin-top: 0; margin-bottom: 12px;">✨ What you can highlight</h4>
-                    <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
-                        <li>🧠 Your <b>technical skills and technologies</b> (e.g. Python, AI, Web)</li>
-                        <li>🚀 <b>Projects or products</b> you’ve worked on</li>
-                        <li>💼 <b>Professional experience</b> and responsibilities</li>
-                        <li>🏆 <b>Certifications</b> and achievements</li>
-                        <li>🌱 <b>Personal interests</b> or areas you're currently learning</li>
-                    </ul>
-                    <p>This helps the AI provide <b>more accurate and personalized answers</b> about your profile.</p>
-                </div>
-                """
+            .flip-card-back p {
+                font-size: 1rem;
+                font-weight: 600;
+                line-height: 1.5;
+                margin: 0;
+                text-align: center;
+                width: 100%;
+            }
+            .flip-card:hover .flip-card-front .flip-btn {
+                background: rgba(15, 38, 92, 0.15);
+            }
+        </style>
+        """
+        st.markdown(css_stil_carduri, unsafe_allow_html=True)
+        
+        # Textul impartit in carduri rotative (pentru un text mai mare si estetic pe spate)
+        card_1 = """
+<label class="flip-card">
+    <input type="checkbox">
+    <div class="flip-card-inner">
+        <div class="flip-card-front">
+            <div class="icon">📄</div>
+            <h3>Upload CV</h3>
+            <div class="flip-btn">Vezi</div>
+        </div>
+        <div class="flip-card-back">
+            <p>Ready? <b>Upload PDF</b><br>+ extra details to forge your AI 🤖</p>
+        </div>
+    </div>
+</label>
+"""
+        
+        card_2 = """
+<label class="flip-card">
+    <input type="checkbox">
+    <div class="flip-card-inner">
+        <div class="flip-card-front">
+            <div class="icon">⚙️</div>
+            <h3>How it works</h3>
+            <div class="flip-btn">Vezi</div>
+        </div>
+        <div class="flip-card-back">
+            <p>Upload ➔ AI learns 🤖<br>➔ Get Link 🔗<br>➔ <b>Live Chat</b> 💬</p>
+        </div>
+    </div>
+</label>
+"""
 
-            card_4 = """
-            <div class="bs-card">
-                <h4 style="margin-top: 0; margin-bottom: 12px;">🚀 Why use it</h4>
-                <ul style="line-height: 1.6; margin-bottom: 10px; padding-left: 20px;">
-                    <li>🤖 Turn your CV into an <b>interactive AI experience</b></li>
-                    <li>⚡ Let others quickly <b>understand your profile</b> without reading long documents</li>
-                    <li>📢 <b>Stand out</b> in interviews or job applications</li>
-                    <li>🌐 Easily <b>share your profile</b> with a simple link</li>
-                    <li>💬 Enable <b>real-time Q&A</b> about your skills and experience</li>
-                </ul>
-                <p>A modern way to present yourself — more engaging than a traditional CV.</p>
-            </div>
-            """
-            
-            st.markdown(card_1, unsafe_allow_html=True)
-            st.markdown(card_2, unsafe_allow_html=True)
-            # st.markdown(card_3, unsafe_allow_html=True)
-            # st.markdown(card_4, unsafe_allow_html=True)
-            
-            #st.write("<p style='font-size: 1.1rem; color: #64748b; margin-top: 2rem;'><strong>Welcome to your intelligent workspace! ✨</strong><br> This application leverages fast text parsing and artificial intelligence algorithms to securely extract, structure, and edit information from your Resumes, CVs, and technical markdown documents in real time. Get started by uploading your files below.</p>", unsafe_allow_html=True)
-        with col2:
+        card_3 = """
+<label class="flip-card">
+    <input type="checkbox">
+    <div class="flip-card-inner">
+        <div class="flip-card-front">
+            <div class="icon">✨</div>
+            <h3>Highlight</h3>
+            <div class="flip-btn">Vezi</div>
+        </div>
+        <div class="flip-card-back">
+            <p>Tech skills 🧠<br>Projects 🚀<br>Experience 💼</p>
+        </div>
+    </div>
+</label>
+"""
 
-            #st.markdown(card_3, unsafe_allow_html=True)
-            #if st.session_state.pdf_extracted_text:
-                # Curățăm textul: păstrăm doar cuvinte
+        card_4 = """
+<label class="flip-card">
+    <input type="checkbox">
+    <div class="flip-card-inner">
+        <div class="flip-card-front">
+            <div class="icon">🚀</div>
+            <h3>Why use it</h3>
+            <div class="flip-btn">Vezi</div>
+        </div>
+        <div class="flip-card-back">
+            <p>Stand Out 📢<br><b>Interactive AI</b> ⚡<br>Enable Q&A 💬</p>
+        </div>
+    </div>
+</label>
+"""
+        
+        # Randarea pe 4 coloane in aceeasi linie sub titlu
+        c1, c2, c3, c4 = st.columns(4)
+        
+        with c1:
+            if hasattr(st, "html"):
+                st.html(card_1)
+            else:
+                st.markdown(card_1, unsafe_allow_html=True)
+        with c2:
+            if hasattr(st, "html"):
+                st.html(card_2)
+            else:
+                st.markdown(card_2, unsafe_allow_html=True)
+        with c3:
+            if hasattr(st, "html"):
+                st.html(card_3)
+            else:
+                st.markdown(card_3, unsafe_allow_html=True)
+        with c4:
+            if hasattr(st, "html"):
+                st.html(card_4)
+            else:
+                st.markdown(card_4, unsafe_allow_html=True)
+            
+        # Sectiunea de Chat URL plasata exact sub randul de carduri
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.expander("🔗 Check your CV Chat url", expanded=False):
+            st.code("http://localhost:8501"+f"{chat_url}")
+            
+        st.divider()
+
+        # Histograma restabilita la cererea utilizatorului
+        if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
             words = re.findall(r'\b\w+\b', st.session_state.pdf_extracted_text)
             if words != []:
                 word_lengths = [len(word) for word in words]
-
-                from collections import Counter
                 length_counts = Counter(word_lengths)
-
                 hist_data = {str(length): count for length, count in sorted(length_counts.items()) if length > 3}
 
                 df = pd.DataFrame({
                     "word_length": list(hist_data.keys()),
                     "count": list(hist_data.values())
                 })
-
                 df = df.set_index("word_length")
 
                 st.subheader("Your CV words length histogram")
                 st.bar_chart(df)
             else:
-                print("No words found")
-                st.divider()
-                st.markdown(card_4, unsafe_allow_html=True)
-            with st.expander("🔗 Check your CV Chat url : ", expanded=False):
-                st.code("http://localhost:8501"+f"{chat_url}")
-            
-            with st.expander("What you can highlight...: ", expanded=False):
-                st.markdown(card_3, unsafe_allow_html=True)
-            
-            # st.markdown(
-            #     "<div style='text-align:center; font-size:100px;'>📄➞💬</div>",
-            #     unsafe_allow_html=True
-            # )
-            
-            #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
-
-        # st.info(f"Your url : {chat_url}")
-
-        #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png")
+                st.info("💡 Încă nu am găsit cuvinte pentru a calcula histograma din CV-ul tău. Te rugăm să încarci fișierele mai jos!")
+        else:
+            st.info("💡 Încă nu ai încărcat niciun CV. Folosește panoul de mai jos!")
 
 
         st.divider()
