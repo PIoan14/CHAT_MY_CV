@@ -3,6 +3,17 @@ from streamlit_option_menu import option_menu
 import pypdf
 from server_calls import register_user, login_user, update_user
 import markdown
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import streamlit as st
+from collections import Counter
+import re
+import streamlit as st
+import re
+from collections import Counter
+
+
 
 st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
@@ -156,7 +167,22 @@ else:
     # --- LOGICA PAGINILOR ---
     if selected == "Home":
 
-        st.markdown(f"<h1>Welcome, {st.session_state.user_data['name']}! 👋🎉</h1>", unsafe_allow_html=True)
+        css_stil_carduri = """
+            <style>
+                .bs-card {
+                    background-color: var(--background-color);
+                    border-radius: 8px;
+                    border: 1px solid rgba(128, 128, 128, 0.2);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                    padding: 1px;
+                    padding-top: 300px;
+                    margin-bottom: 20px;
+                    color: var(--text-color);
+                }
+            </style>
+            """
+
+        st.markdown(f"<div class='bs-card'><h2>Welcome, {st.session_state.user_data['name']}! 👋🎉</h2></div>", unsafe_allow_html=True)
         col1, col2 = st.columns([5, 5])
         with col1:
             #st.divider()
@@ -236,8 +262,30 @@ else:
         with col2:
 
             #st.markdown(card_3, unsafe_allow_html=True)
-            st.divider()
-            st.markdown(card_4, unsafe_allow_html=True)
+            #if st.session_state.pdf_extracted_text:
+                # Curățăm textul: păstrăm doar cuvinte
+            words = re.findall(r'\b\w+\b', st.session_state.pdf_extracted_text)
+            if words != []:
+                word_lengths = [len(word) for word in words]
+
+                from collections import Counter
+                length_counts = Counter(word_lengths)
+
+                hist_data = {str(length): count for length, count in sorted(length_counts.items()) if length > 3}
+
+                df = pd.DataFrame({
+                    "word_length": list(hist_data.keys()),
+                    "count": list(hist_data.values())
+                })
+
+                df = df.set_index("word_length")
+
+                st.subheader("Your CV words length histogram")
+                st.bar_chart(df)
+            else:
+                print("No words found")
+                st.divider()
+                st.markdown(card_4, unsafe_allow_html=True)
             with st.expander("🔗 Check your CV Chat url : ", expanded=False):
                 st.code("http://localhost:8501"+f"{chat_url}")
             
@@ -257,17 +305,6 @@ else:
 
 
         st.divider()
-        import pandas as pd
-        import numpy as np
-        import matplotlib.pyplot as plt
-        import streamlit as st
-        from collections import Counter
-        import re
-
-        import streamlit as st
-        import re
-        from collections import Counter
-
 
         # if st.session_state.pdf_extracted_text:
         #     # Curățăm textul: păstrăm doar cuvinte
@@ -284,7 +321,7 @@ else:
         #     st.subheader("Histogramă lungime cuvinte")
         #     st.bar_chart(hist_data)
 
-        
+
         # st.markdown("### Your CV Chat url : ")
         # col1, col2 = st.columns([5, 5])
         # with col1:
