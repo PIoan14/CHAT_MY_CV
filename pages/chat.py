@@ -98,6 +98,7 @@ if not current_chat_user:
     st.markdown('<a href="/" target="_self">Întoarce-te la Home 🏠</a>', unsafe_allow_html=True)
     st.stop()
 
+
 # Header al paginii
 st.subheader(f"👤 Chat cu Asistentul lui {current_chat_username} 💬")
 st.markdown(f"Pune întrebări agentului AI instruit special pe documentele lui **{current_chat_username}**.")

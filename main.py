@@ -22,7 +22,6 @@ if 'logged_in' not in st.session_state:
 
 import urllib.parse
 
-# Determina link-ul dinamic catre sectiunea de chat
 if st.session_state.logged_in and st.session_state.current_user:
     username_safe = urllib.parse.quote(st.session_state.get('user_data', {}).get('name', st.session_state.current_user))
     chat_url = f"/chat?user={st.session_state.current_user}&username={username_safe}"
@@ -112,6 +111,23 @@ if not st.session_state.logged_in:
                         st.session_state.current_user = response.json()["logged_in_id"]
                         st.session_state.current_user_name = response.json()["username"]
                         st.session_state.pdf_extracted_text = response.json()["CV_content"]
+
+                        st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
+
+                        phrases = st.session_state.pdf_extracted_text.split(". ")
+                        phrases_text = st.session_state.pdf_extracted_text.split(". ")
+
+                        final_pdf_show = ""
+
+                        for phrase in phrases:
+
+                            if not phrase.endswith("."):
+                                final_pdf_show += f"{phrase}.\n"
+                            else:
+                                final_pdf_show += f"{phrase}\n"
+
+                        st.session_state.pdf_extracted_text = final_pdf_show
+                        
                         st.session_state.txt_extracted_text = response.json()["text_summary"]
                         st.session_state.logged_in = True
                         #if 'user_data' not in st.session_state:
@@ -396,55 +412,113 @@ else:
             
         st.divider()
 
-        # Histograma restabilita la cererea utilizatorului
-        if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
-            words = re.findall(r'\b\w+\b', st.session_state.pdf_extracted_text)
-            if words != []:
-                word_lengths = [len(word) for word in words]
-                length_counts = Counter(word_lengths)
-                hist_data = {str(length): count for length, count in sorted(length_counts.items()) if length > 3}
+        # Histograme bazate pe "phrases" și "phrases_text" (lungime în cuvinte)
+        col_hist1, spacer, col_hist2 = st.columns([10, 1, 10]) # Am adăugat spațiu între ele
+        import altair as alt
 
-                df = pd.DataFrame({
-                    "word_length": list(hist_data.keys()),
-                    "count": list(hist_data.values())
-                })
-                df = df.set_index("word_length")
-
-                st.subheader("Your CV words length histogram")
-                st.bar_chart(df)
+        with col_hist1:
+            if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
+                phrases = st.session_state.pdf_extracted_text.split(".\n")
+                
+                length_counts = [len(x.split()) for x in phrases]
+                pars = zip(phrases, length_counts)
+                
+                representatin = {
+                    "short": [],
+                    "medium": [],
+                    "long": [],
+                    "very long": []
+                }
+                for p in pars:
+                    if p[1] < 5:
+                        representatin["short"].append(p[0])
+                    elif p[1] < 15:
+                        representatin["medium"].append(p[0])
+                    elif p[1] < 25:
+                        representatin["long"].append(p[0])
+                    else:
+                        representatin["very long"].append(p[0])
+                
+                total_fraze = sum(len(lst) for lst in representatin.values())
+                if total_fraze > 0:
+                    df_phrases = pd.DataFrame({
+                        "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
+                        "Număr de Fraze": [len(representatin["short"]), len(representatin["medium"]), len(representatin["long"]), len(representatin["very long"])]
+                    })
+                    
+                    st.subheader("📊 Histograma PDF")
+                    st.markdown(f"**Total fraze**: {total_fraze}")
+                    
+                    # Folosim Altair pentru a putea controla grosimea și culoarea exactă a barelor
+                    chart1 = alt.Chart(df_phrases).mark_bar(
+                        size=60, color='#87CEEB', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
+                    ).encode(
+                        x=alt.X('Lungime (cuvinte)', sort=None, title=''),
+                        y=alt.Y('Număr de Fraze', title='Total Fraze'),
+                        tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
+                    ).properties(height=350)
+                    st.altair_chart(chart1, use_container_width=True)
+                else:
+                    st.info("💡 Nu am găsit fraze valide în CV-ul PDF.")
             else:
-                st.info("💡 Încă nu am găsit cuvinte pentru a calcula histograma din CV-ul tău. Te rugăm să încarci fișierele mai jos!")
-        else:
-            st.info("💡 Încă nu ai încărcat niciun CV. Folosește panoul de mai jos!")
+                st.info("💡 CV PDF neîncărcat. Nu putem afișa histograma.")
+
+        with col_hist2:
+            text_source = st.session_state.get('txt_extracted_text', '')
+            titlu_hist2 = "📊 Histograma TXT/MD"
+            
+            if not text_source and hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
+                text_source = st.session_state.pdf_extracted_text
+                titlu_hist2 = "📊 Histograma PDF Copie"
+            
+            if text_source:
+                phrases_text = text_source.split(".")
+                
+                length_counts_text = [len(x.split()) for x in phrases_text]
+                pars_text = zip(phrases_text, length_counts_text)
+                
+                representatin_text = {
+                    "short": [],
+                    "medium": [],
+                    "long": [],
+                    "very long": []
+                }
+                for p in pars_text:
+                    if p[1] < 5:
+                        representatin_text["short"].append(p[0])
+                    elif p[1] < 15:
+                        representatin_text["medium"].append(p[0])
+                    elif p[1] < 25:
+                        representatin_text["long"].append(p[0])
+                    else:
+                        representatin_text["very long"].append(p[0])
+                
+                total_fraze_text = sum(len(lst) for lst in representatin_text.values())
+                if total_fraze_text > 0:
+                    df_phrases_text = pd.DataFrame({
+                        "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
+                        "Număr de Fraze": [len(representatin_text["short"]), len(representatin_text["medium"]), len(representatin_text["long"]), len(representatin_text["very long"])]
+                    })
+                    
+                    st.subheader(titlu_hist2)
+                    st.markdown(f"**Total fraze**: {total_fraze_text}")
+                    
+                    chart2 = alt.Chart(df_phrases_text).mark_bar(
+                        size=60, color='#ADD8E6', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
+                    ).encode(
+                        x=alt.X('Lungime (cuvinte)', sort=None, title=''),
+                        y=alt.Y('Număr de Fraze', title='Total Fraze'),
+                        tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
+                    ).properties(height=350)
+                    st.altair_chart(chart2, use_container_width=True)
+                else:
+                    st.info("💡 Nu am găsit fraze valide în text.")
+            else:
+                st.info("💡 Fișier pentru text neîncărcat.")
 
 
         st.divider()
 
-        # if st.session_state.pdf_extracted_text:
-        #     # Curățăm textul: păstrăm doar cuvinte
-        #     words = re.findall(r'\b\w+\b', st.session_state.pdf_extracted_text)
-
-        #     word_lengths = [len(word) for word in words]
-
-        #     # Numărăm câte apariții are fiecare lungime
-        #     length_counts = Counter(word_lengths)
-
-        #     # Pregătim datele pentru Streamlit
-        #     hist_data = {str(length): count for length, count in sorted(length_counts.items())}
-
-        #     st.subheader("Histogramă lungime cuvinte")
-        #     st.bar_chart(hist_data)
-
-
-        # st.markdown("### Your CV Chat url : ")
-        # col1, col2 = st.columns([5, 5])
-        # with col1:
-        #     with st.expander("🔗 Check your CV Chat url : ", expanded=False):
-        #         st.code("http://localhost:8501"+f"{chat_url}")
-        # with col2:
-        #     with st.expander("What you can highlight...: ", expanded=False):
-        #         st.markdown(card_3, unsafe_allow_html=True)
-        # st.divider()
         st.subheader("Upload area:")
         col1, col2 = st.columns(2)
         
@@ -464,13 +538,29 @@ else:
                                 full_text = ""
                                 for page in reader.pages:
                                     full_text += page.extract_text()
-                                
-
-                                update_user(st.session_state.current_user, "CV_content", full_text)
+                            
                                 
                                 st.success("✅ Textul PDF-ului a fost trimis în consolă!")
 
                                 st.session_state.pdf_extracted_text = full_text
+
+                                st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
+
+                                phrases = st.session_state.pdf_extracted_text.split(". ")
+
+                                final_pdf_show = ""
+
+                                for phrase in phrases:
+
+                                    if not phrase.endswith("."):
+                                        final_pdf_show += f"{phrase}.\n"
+                                    else:
+                                        final_pdf_show += f"{phrase}\n"
+
+                                st.session_state.pdf_extracted_text = final_pdf_show
+
+                                update_user(st.session_state.current_user, "CV_content", st.session_state.pdf_extracted_text)
+
 
                             except Exception as e:
                                 st.error(f"❌ Eroare la citirea PDF-ului: {e}")
@@ -498,6 +588,7 @@ else:
                                 
                                 # Salveaza textul extras in session state pentru a fi editat
                                 st.session_state.txt_extracted_text = txt_full_text
+
                             except Exception as e:
                                 st.error(f"❌ Eroare la citirea fișierului: {e}")
                         else:
@@ -506,6 +597,7 @@ else:
         st.subheader("Edit area:")
         st.text("In the case of the first upload of some documents, you will be able to see the extracted content after you refresh the page!")
         with st.expander("✏️ Editează textul extras din PDF:", expanded=False):
+
             pdf_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor", label_visibility="collapsed")
             if st.button("💾 Change PDF Content"):
                 st.session_state.pdf_extracted_text = pdf_edited_text
@@ -514,6 +606,7 @@ else:
 
         #st.divider()
         with st.expander("✏️ Editează textul extras din Markdown/Text:", expanded=False):
+
             txt_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.txt_extracted_text, height=400, key="txt_editor", label_visibility="collapsed")
             if st.button("💾 Change TXT Content"):
                 st.session_state.txt_extracted_text = txt_edited_text
@@ -521,8 +614,7 @@ else:
                 st.success("✅ Conținutul TXT/MD a fost actualizat!")
 
         st.divider()
-        #st.image("/Users/paulnicola/.gemini/antigravity/brain/5c0bbdc3-bff9-40a2-ae3c-df362b66c478/cv_processing_illustration_1773403713997.png", use_container_width=True)
-
+        
     elif selected == "Analytics":
         st.title("📈📊 Analytics Dashboard 🚀✨")
         st.markdown("<p style='color: #64748b; font-size: 1.1rem;'>Aici poți vedea o imagine de ansamblu a activității tale. 💡</p>", unsafe_allow_html=True)
@@ -549,18 +641,7 @@ else:
     elif selected == "Settings":
         st.title("⚙️🛠️ Setări Platformă 🛡️")
         
-        #tab_cont = st.tabs(["🔐 Securitate Cont"])
-        
-        # with tab_pref:
-        #     st.subheader("🔔 Preferințe Notificări")
-        #     st.checkbox("📧 Notificări pe email pentru noutăți", value=True)
-        #     st.checkbox("🛡️ Alerte de securitate (recomandat)", value=True)
-            
-        #     st.divider()
-        #     st.subheader("🎨 Personalizare")
-        #     st.color_picker("Alege culoarea de accent (În curând) 🖌️", value="#ffd21e")
-
-        #with tab_cont:
+    
         st.subheader("🔐 Modifică Datele de Autentificare")
         st.info("💡 Aici îți poți schimba numele de utilizator și parola contului curent.")
         
