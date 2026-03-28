@@ -12,6 +12,7 @@ import re
 import streamlit as st
 import re
 from collections import Counter
+import altair as alt
 
 
 
@@ -80,6 +81,7 @@ st.markdown(f"""
     <a href="{chat_url}" target="_self">💬 Chat</a>
 </div>
 """, unsafe_allow_html=True)
+
 
 # Ascunde complet sidebar-ul la login
 if not st.session_state.logged_in:
@@ -220,7 +222,7 @@ else:
             Simply upload your document 📄, highlight your best skills 💡, and our intelligent engine 🤖 will craft a personalized knowledge base instantly. Generate your unique link 🔗 and share it with recruiters so they can chat directly with your virtual profile and discover why you're the perfect fit! 🎯
         </div>
         """, unsafe_allow_html=True)
-        st.divider()
+
         
         # CSS pentru cardurile rotative (inaltime redusa la jumatate)
         css_stil_carduri = """
@@ -410,114 +412,133 @@ else:
         with st.expander("🔗 Check your CV Chat url", expanded=False):
             st.code("http://localhost:8501"+f"{chat_url}")
             
-        st.divider()
+    
 
         # Histograme bazate pe "phrases" și "phrases_text" (lungime în cuvinte)
+        st.markdown("""
+        <style>
+            /* Aplicăm stilul pe stVerticalBlockBorderWrapper (containerul care are border-ul nativ). Acest lucru va face TOATE st.container(border=True) sa incapsuleze vizual acel aspect curat de pe Chat.py */
+            div[data-testid="stVerticalBlockBorderWrapper"] {
+                background: rgba(128, 128, 128, 0.05) !important;
+                border-radius: 12px !important;
+                padding: 20px !important;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
+                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+            }
+            div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+                transform: translateY(-3px) !important;
+                box-shadow: 0 12px 35px rgba(0,0,0,0.6) !important;
+            }
+        </style>
+        """, unsafe_allow_html=True)
         col_hist1, spacer, col_hist2 = st.columns([10, 1, 10]) # Am adăugat spațiu între ele
-        import altair as alt
-
+       
         with col_hist1:
-            if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
-                phrases = st.session_state.pdf_extracted_text.split(".\n")
-                
-                length_counts = [len(x.split()) for x in phrases]
-                pars = zip(phrases, length_counts)
-                
-                representatin = {
-                    "short": [],
-                    "medium": [],
-                    "long": [],
-                    "very long": []
-                }
-                for p in pars:
-                    if p[1] < 5:
-                        representatin["short"].append(p[0])
-                    elif p[1] < 15:
-                        representatin["medium"].append(p[0])
-                    elif p[1] < 25:
-                        representatin["long"].append(p[0])
+            st.subheader("📊 Histograma PDF")
+            with st.container(border=True):
+                if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
+                    phrases = st.session_state.pdf_extracted_text.split(".\n")
+                    
+                    length_counts = [len(x.split()) for x in phrases]
+                    pars = zip(phrases, length_counts)
+                    
+                    representatin = {
+                        "short": [],
+                        "medium": [],
+                        "long": [],
+                        "very long": []
+                    }
+                    for p in pars:
+                        if p[1] < 5:
+                            representatin["short"].append(p[0])
+                        elif p[1] < 15:
+                            representatin["medium"].append(p[0])
+                        elif p[1] < 25:
+                            representatin["long"].append(p[0])
+                        else:
+                            representatin["very long"].append(p[0])
+                    
+                    total_fraze = sum(len(lst) for lst in representatin.values())
+                    if total_fraze > 0:
+                        df_phrases = pd.DataFrame({
+                            "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
+                            "Număr de Fraze": [len(representatin["short"]), len(representatin["medium"]), len(representatin["long"]), len(representatin["very long"])]
+                        })
+                        
+
+                        st.markdown(f"**Total fraze**: {total_fraze}")
+                        
+                        # Folosim Altair pentru a putea controla grosimea și culoarea exactă a barelor
+                        chart1 = alt.Chart(df_phrases).mark_bar(
+                            size=50, color='#87CEEB', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
+                        ).encode(
+                            x=alt.X('Lungime (cuvinte)', sort=None, title=''),
+                            y=alt.Y('Număr de Fraze', title='Total Fraze'),
+                            tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
+                        ).properties(height=350)
+                        st.altair_chart(chart1, use_container_width=True)
                     else:
-                        representatin["very long"].append(p[0])
-                
-                total_fraze = sum(len(lst) for lst in representatin.values())
-                if total_fraze > 0:
-                    df_phrases = pd.DataFrame({
-                        "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
-                        "Număr de Fraze": [len(representatin["short"]), len(representatin["medium"]), len(representatin["long"]), len(representatin["very long"])]
-                    })
-                    
-                    st.subheader("📊 Histograma PDF")
-                    st.markdown(f"**Total fraze**: {total_fraze}")
-                    
-                    # Folosim Altair pentru a putea controla grosimea și culoarea exactă a barelor
-                    chart1 = alt.Chart(df_phrases).mark_bar(
-                        size=60, color='#87CEEB', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
-                    ).encode(
-                        x=alt.X('Lungime (cuvinte)', sort=None, title=''),
-                        y=alt.Y('Număr de Fraze', title='Total Fraze'),
-                        tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
-                    ).properties(height=350)
-                    st.altair_chart(chart1, use_container_width=True)
+                        st.info("💡 Nu am găsit fraze valide în CV-ul PDF.")
                 else:
-                    st.info("💡 Nu am găsit fraze valide în CV-ul PDF.")
-            else:
-                st.info("💡 CV PDF neîncărcat. Nu putem afișa histograma.")
+                    st.info("💡 CV PDF neîncărcat. Nu putem afișa histograma.")
 
         with col_hist2:
-            text_source = st.session_state.get('txt_extracted_text', '')
             titlu_hist2 = "📊 Histograma TXT/MD"
-            
-            if not text_source and hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
-                text_source = st.session_state.pdf_extracted_text
-                titlu_hist2 = "📊 Histograma PDF Copie"
-            
-            if text_source:
-                phrases_text = text_source.split(".")
+            st.subheader(titlu_hist2)
+            with st.container(border=True):
+                text_source = st.session_state.get('txt_extracted_text', '')
                 
-                length_counts_text = [len(x.split()) for x in phrases_text]
-                pars_text = zip(phrases_text, length_counts_text)
                 
-                representatin_text = {
-                    "short": [],
-                    "medium": [],
-                    "long": [],
-                    "very long": []
-                }
-                for p in pars_text:
-                    if p[1] < 5:
-                        representatin_text["short"].append(p[0])
-                    elif p[1] < 15:
-                        representatin_text["medium"].append(p[0])
-                    elif p[1] < 25:
-                        representatin_text["long"].append(p[0])
+                if not text_source and hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
+                    text_source = st.session_state.pdf_extracted_text
+                    titlu_hist2 = "📊 Histograma PDF Copie"
+                
+                if text_source:
+                    phrases_text = text_source.split(".")
+                    
+                    length_counts_text = [len(x.split()) for x in phrases_text]
+                    pars_text = zip(phrases_text, length_counts_text)
+                    
+                    representatin_text = {
+                        "short": [],
+                        "medium": [],
+                        "long": [],
+                        "very long": []
+                    }
+                    for p in pars_text:
+                        if p[1] < 5:
+                            representatin_text["short"].append(p[0])
+                        elif p[1] < 15:
+                            representatin_text["medium"].append(p[0])
+                        elif p[1] < 25:
+                            representatin_text["long"].append(p[0])
+                        else:
+                            representatin_text["very long"].append(p[0])
+                    
+                    total_fraze_text = sum(len(lst) for lst in representatin_text.values())
+                    if total_fraze_text > 0:
+                        df_phrases_text = pd.DataFrame({
+                            "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
+                            "Număr de Fraze": [len(representatin_text["short"]), len(representatin_text["medium"]), len(representatin_text["long"]), len(representatin_text["very long"])]
+                        })
+                        
+                        
+                        st.markdown(f"**Total fraze**: {total_fraze_text}")
+                        
+                        chart2 = alt.Chart(df_phrases_text).mark_bar(
+                            size=50, color='#ADD8E6', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
+                        ).encode(
+                            x=alt.X('Lungime (cuvinte)', sort=None, title=''),
+                            y=alt.Y('Număr de Fraze', title='Total Fraze'),
+                            tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
+                        ).properties(height=350)
+                        st.altair_chart(chart2, use_container_width=True)
                     else:
-                        representatin_text["very long"].append(p[0])
-                
-                total_fraze_text = sum(len(lst) for lst in representatin_text.values())
-                if total_fraze_text > 0:
-                    df_phrases_text = pd.DataFrame({
-                        "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
-                        "Număr de Fraze": [len(representatin_text["short"]), len(representatin_text["medium"]), len(representatin_text["long"]), len(representatin_text["very long"])]
-                    })
-                    
-                    st.subheader(titlu_hist2)
-                    st.markdown(f"**Total fraze**: {total_fraze_text}")
-                    
-                    chart2 = alt.Chart(df_phrases_text).mark_bar(
-                        size=60, color='#ADD8E6', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
-                    ).encode(
-                        x=alt.X('Lungime (cuvinte)', sort=None, title=''),
-                        y=alt.Y('Număr de Fraze', title='Total Fraze'),
-                        tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
-                    ).properties(height=350)
-                    st.altair_chart(chart2, use_container_width=True)
+                        st.info("💡 Nu am găsit fraze valide în text.")
                 else:
-                    st.info("💡 Nu am găsit fraze valide în text.")
-            else:
-                st.info("💡 Fișier pentru text neîncărcat.")
+                    st.info("💡 Fișier pentru text neîncărcat.")
 
-
-        st.divider()
 
         st.subheader("Upload area:")
         col1, col2 = st.columns(2)
