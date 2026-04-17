@@ -1,6 +1,46 @@
 import streamlit as st
 from server_calls import chat_RAG_llm
 import time
+import re
+import pandas as pd
+
+
+def afiseaza_tabel_curat(text):
+           
+            randuri_tabel = [line.strip() for line in text.split('|') if line.strip()]
+            
+            date_curate = [r for r in randuri_tabel[1:] if '---' not in r]
+            
+            if len(date_curate) >= 4:
+                header_1 = date_curate[0] # "Skill"
+                header_2 = date_curate[1] # "Level"
+                
+                corp_date = date_curate[2:]
+                # Dacă ultimul element pare a fi text lung (de după tabel), îl tăiem
+                if len(corp_date) % 2 != 0:
+                    corp_date = corp_date[:-1]
+                    
+                rows = []
+                for i in range(0, len(corp_date), 2):
+                    rows.append({header_1: corp_date[i], header_2: corp_date[i+1]})
+                
+                # Afișăm textul de dinainte de tabel (opțional)
+                intro_text = text.split('|')[0]
+                st.write(intro_text)
+                
+                # Afișăm tabela propriu-zisă
+                df = pd.DataFrame(rows)
+                st.table(df) # st.table arată fix ca o tabelă clasică
+                
+                # Afișăm textul de după tabel
+                outro_text = text.split('|')[-1]
+                if len(outro_text) > 20: # Doar dacă e text lung, nu doar o bucată de tabel
+                    st.write(outro_text)
+            else:
+                # Fallback dacă ceva merge groaznic de prost
+                st.markdown(text)
+            return text
+
 
 # OBLIGATORIU: set_page_config trebuie să fie prima comandă Streamlit
 st.set_page_config(page_title="Chat", layout="wide", page_icon="💬")
@@ -100,8 +140,12 @@ if not current_chat_user:
 
 
 # Header al paginii
-st.subheader(f"👤 Chat cu Asistentul lui {current_chat_username} 💬")
-st.markdown(f"Pune întrebări agentului AI instruit special pe documentele lui **{current_chat_username}**.")
+st.subheader(f"👤 Chat with the assistant of {current_chat_username} 💬")
+st.markdown(f"Ask questions to the AI agent trained specifically on **{current_chat_username}**'s documents.")
+
+if "RAG" not in st.session_state:
+    st.session_state.RAG = False
+st.toggle("🧠 Extrage Context via RAG", key="RAG")
 
 
 # Inițializarea istoricului de chat în session_state dacă nu există
@@ -141,10 +185,35 @@ if prompt := st.chat_input("Scrie un mesaj aici..."):
         
         # Menținem complet funcționalitatea existentă RAG_llm
         current_index = st.session_state[mock_index_key]
-        response_text = chat_RAG_llm(current_chat_user, prompt)
+        response_text = chat_RAG_llm(current_chat_user, prompt, RAG=st.session_state.RAG)
         st.session_state[mock_index_key] = (current_index + 1) % len(mock_responses)
     
     # Adăugăm și afișăm răspunsul de la asistent
-    st.session_state[chat_history_key].append({"role": "assistant", "content": response_text})
-    with st.chat_message("assistant"):
-        st.markdown(response_text)
+    
+        with st.chat_message("assistant"):
+
+            # Creăm un placeholder gol
+            placeholder = st.empty()
+            
+            # Rulăm stream-ul și colectăm răspunsul
+            # Notă: st.write_stream va scrie în pagină, deci îl punem în placeholder
+            full_response = placeholder.write_stream(response_text)
+            
+            # Imediat după ce s-a terminat stream-ul, înlocuim TOT conținutul 
+            # din placeholder cu varianta formatată corect
+            with placeholder.container():
+                kept=afiseaza_tabel_curat(full_response)
+
+            # response_kept = st.write_stream(response_text)
+            # print(response_kept)
+            # afiseaza_tabel_curat(response_kept)
+        #response_kept = fix_markdown_tables(response_kept)
+
+        #raspuns_llm = """Paul has a solid foundation in SQL, with a good level of proficiency, as well as an Oracle Academy award in Database Programming with SQL. Additionally, he holds an ECDL diploma, which showcases his expertise in using tools like Power BI for data analysis projects. Here's a summary of his skills in SQL and diploma: | Skill | Level | | --- | --- | | SQL | Good | | Oracle Academy award in Database Programming with SQL | Awarded | | ECDL diploma | Diploma | These skills demonstrate Paul's potential for working with databases and data analysis, making him a strong candidate for roles that require proficiency in SQL and data management."""
+
+        
+
+        
+           
+    st.session_state[chat_history_key].append({"role": "assistant", "content": kept})
+        

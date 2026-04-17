@@ -1,7 +1,7 @@
 import streamlit as st
 from streamlit_option_menu import option_menu
 import pypdf
-from server_calls import register_user, login_user, update_user
+from server_calls import register_user, login_user, update_user, delete_user
 import markdown
 import pandas as pd
 import numpy as np
@@ -13,6 +13,7 @@ import streamlit as st
 import re
 from collections import Counter
 import altair as alt
+from web_search import search_on_internet
 
 
 
@@ -114,21 +115,22 @@ if not st.session_state.logged_in:
                         st.session_state.current_user_name = response.json()["username"]
                         st.session_state.pdf_extracted_text = response.json()["CV_content"]
 
-                        st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
+                        if st.session_state.pdf_extracted_text:
+                            st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
 
-                        phrases = st.session_state.pdf_extracted_text.split(". ")
-                        phrases_text = st.session_state.pdf_extracted_text.split(". ")
+                            phrases = st.session_state.pdf_extracted_text.split(". ")
+                            phrases_text = st.session_state.pdf_extracted_text.split(". ")
 
-                        final_pdf_show = ""
+                            final_pdf_show = ""
 
-                        for phrase in phrases:
+                            for phrase in phrases:
 
-                            if not phrase.endswith("."):
-                                final_pdf_show += f"{phrase}.\n"
-                            else:
-                                final_pdf_show += f"{phrase}\n"
+                                if not phrase.endswith("."):
+                                    final_pdf_show += f"{phrase}.\n"
+                                else:
+                                    final_pdf_show += f"{phrase}\n"
 
-                        st.session_state.pdf_extracted_text = final_pdf_show
+                            st.session_state.pdf_extracted_text = final_pdf_show
                         
                         st.session_state.txt_extracted_text = response.json()["text_summary"]
                         st.session_state.logged_in = True
@@ -165,7 +167,7 @@ if not st.session_state.logged_in:
                             st.error("❌ Credentiale incorecte!")
                     
 else:
-    # Sidebar cu meniu frumos
+   
     with st.sidebar:
         st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
         st.markdown(f"### 👋 Hello, {st.session_state.user_data['name']}! 🌟")
@@ -182,7 +184,6 @@ else:
             st.session_state.logged_in = False
             st.rerun()
 
-    # --- LOGICA PAGINILOR ---
     if selected == "Home":
 
         css_stil_carduri = """
@@ -408,7 +409,6 @@ else:
                 st.markdown(card_4, unsafe_allow_html=True)
             
         # Sectiunea de Chat URL plasata exact sub randul de carduri
-        st.markdown("<br>", unsafe_allow_html=True)
         with st.expander("🔗 Check your CV Chat url", expanded=False):
             st.code("http://localhost:8501"+f"{chat_url}")
             
@@ -417,129 +417,132 @@ else:
         # Histograme bazate pe "phrases" și "phrases_text" (lungime în cuvinte)
         st.markdown("""
         <style>
-            /* Aplicăm stilul pe stVerticalBlockBorderWrapper (containerul care are border-ul nativ). Acest lucru va face TOATE st.container(border=True) sa incapsuleze vizual acel aspect curat de pe Chat.py */
+            /* Aplicăm stilul luminos tip "Search Findings" pe toate containerele native cu border (de exemplu cardurile cu histograme). */
             div[data-testid="stVerticalBlockBorderWrapper"] {
-                background: rgba(128, 128, 128, 0.05) !important;
-                border-radius: 12px !important;
-                padding: 20px !important;
-                box-shadow: 0 8px 24px rgba(0,0,0,0.4) !important;
-                border: 1px solid rgba(128, 128, 128, 0.2) !important;
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 248, 255, 0.95) 100%) !important;
+                backdrop-filter: blur(8px) !important;
+                border-radius: 16px !important;
+                padding: 20px 25px !important;
+                box-shadow: 0 6px 12px rgba(0,0,0,0.1) !important;
+                border: 1px solid rgba(255,255,255,0.8) !important;
                 transition: transform 0.2s ease, box-shadow 0.2s ease !important;
             }
             div[data-testid="stVerticalBlockBorderWrapper"]:hover {
                 transform: translateY(-3px) !important;
-                box-shadow: 0 12px 35px rgba(0,0,0,0.6) !important;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.15) !important;
+            }
+            /* Culoare albastru închis pentru a asigura lizibilitatea textului din Streamlit chiar și cu sistemul pe Dark Mode */
+            div[data-testid="stVerticalBlockBorderWrapper"] p,
+            div[data-testid="stVerticalBlockBorderWrapper"] h1,
+            div[data-testid="stVerticalBlockBorderWrapper"] h2,
+            div[data-testid="stVerticalBlockBorderWrapper"] h3,
+            div[data-testid="stVerticalBlockBorderWrapper"] h4,
+            div[data-testid="stVerticalBlockBorderWrapper"] span {
+                color: #0f265c !important;
             }
         </style>
         """, unsafe_allow_html=True)
         col_hist1, spacer, col_hist2 = st.columns([10, 1, 10]) # Am adăugat spațiu între ele
        
-        with col_hist1:
-            st.subheader("📊 Histograma PDF")
-            with st.container(border=True):
-                if hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
-                    phrases = st.session_state.pdf_extracted_text.split(".\n")
-                    
-                    length_counts = [len(x.split()) for x in phrases]
-                    pars = zip(phrases, length_counts)
-                    
-                    representatin = {
-                        "short": [],
-                        "medium": [],
-                        "long": [],
-                        "very long": []
-                    }
-                    for p in pars:
-                        if p[1] < 5:
-                            representatin["short"].append(p[0])
-                        elif p[1] < 15:
-                            representatin["medium"].append(p[0])
-                        elif p[1] < 25:
-                            representatin["long"].append(p[0])
-                        else:
-                            representatin["very long"].append(p[0])
-                    
-                    total_fraze = sum(len(lst) for lst in representatin.values())
-                    if total_fraze > 0:
-                        df_phrases = pd.DataFrame({
-                            "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
-                            "Număr de Fraze": [len(representatin["short"]), len(representatin["medium"]), len(representatin["long"]), len(representatin["very long"])]
-                        })
-                        
-
-                        st.markdown(f"**Total fraze**: {total_fraze}")
-                        
-                        # Folosim Altair pentru a putea controla grosimea și culoarea exactă a barelor
-                        chart1 = alt.Chart(df_phrases).mark_bar(
-                            size=50, color='#87CEEB', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
-                        ).encode(
-                            x=alt.X('Lungime (cuvinte)', sort=None, title=''),
-                            y=alt.Y('Număr de Fraze', title='Total Fraze'),
-                            tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
-                        ).properties(height=350)
-                        st.altair_chart(chart1, use_container_width=True)
-                    else:
-                        st.info("💡 Nu am găsit fraze valide în CV-ul PDF.")
-                else:
-                    st.info("💡 CV PDF neîncărcat. Nu putem afișa histograma.")
-
-        with col_hist2:
-            titlu_hist2 = "📊 Histograma TXT/MD"
-            st.subheader(titlu_hist2)
-            with st.container(border=True):
-                text_source = st.session_state.get('txt_extracted_text', '')
-                
-                
-                if not text_source and hasattr(st.session_state, 'pdf_extracted_text') and st.session_state.pdf_extracted_text:
-                    text_source = st.session_state.pdf_extracted_text
-                    titlu_hist2 = "📊 Histograma PDF Copie"
-                
-                if text_source:
-                    phrases_text = text_source.split(".")
-                    
-                    length_counts_text = [len(x.split()) for x in phrases_text]
-                    pars_text = zip(phrases_text, length_counts_text)
-                    
-                    representatin_text = {
-                        "short": [],
-                        "medium": [],
-                        "long": [],
-                        "very long": []
-                    }
-                    for p in pars_text:
-                        if p[1] < 5:
-                            representatin_text["short"].append(p[0])
-                        elif p[1] < 15:
-                            representatin_text["medium"].append(p[0])
-                        elif p[1] < 25:
-                            representatin_text["long"].append(p[0])
-                        else:
-                            representatin_text["very long"].append(p[0])
-                    
-                    total_fraze_text = sum(len(lst) for lst in representatin_text.values())
-                    if total_fraze_text > 0:
-                        df_phrases_text = pd.DataFrame({
-                            "Lungime (cuvinte)": ["short", "medium", "long", "very long"],
-                            "Număr de Fraze": [len(representatin_text["short"]), len(representatin_text["medium"]), len(representatin_text["long"]), len(representatin_text["very long"])]
-                        })
-                        
-                        
-                        st.markdown(f"**Total fraze**: {total_fraze_text}")
-                        
-                        chart2 = alt.Chart(df_phrases_text).mark_bar(
-                            size=50, color='#ADD8E6', cornerRadiusTopLeft=4, cornerRadiusTopRight=4
-                        ).encode(
-                            x=alt.X('Lungime (cuvinte)', sort=None, title=''),
-                            y=alt.Y('Număr de Fraze', title='Total Fraze'),
-                            tooltip=['Lungime (cuvinte)', 'Număr de Fraze']
-                        ).properties(height=350)
-                        st.altair_chart(chart2, use_container_width=True)
-                    else:
-                        st.info("💡 Nu am găsit fraze valide în text.")
-                else:
-                    st.info("💡 Fișier pentru text neîncărcat.")
-
-
+        st.markdown(f"""
+        <style>
+        .premium-interactive-banner {{
+            background: linear-gradient(135deg, rgba(240, 248, 255, 0.98) 0%, rgba(200, 230, 255, 0.95) 100%);
+            backdrop-filter: blur(8px);
+            border-radius: 16px;
+            padding: 20px 30px;
+            margin-top: 15px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }}
+        .premium-interactive-banner:hover {{
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+        }}
+        /* Efect de lumina care se plimba subtil pe fundal */
+        .premium-interactive-banner::after {{
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shine 6s infinite;
+        }}
+        @keyframes shine {{
+            0% {{ left: -100%; }}
+            20% {{ left: 200%; }}
+            100% {{ left: 200%; }}
+        }}
+        .banner-text h2 {{
+            margin: 0 0 5px 0;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #0c1e4a !important;
+            display: flex;
+            align-items: center;
+        }}
+        .banner-text p {{
+            margin: 0;
+            font-size: 0.95rem;
+            color: #334155 !important;
+        }}
+        .banner-action {{
+            background: rgba(15, 38, 92, 0.08);
+            border-radius: 50px;
+            padding: 10px 25px;
+            font-weight: 600;
+            border: 1px solid rgba(15, 38, 92, 0.35);
+            transition: all 0.3s ease;
+            color: #0c1e4a;
+            text-align: center;
+            z-index: 2;
+        }}
+        .premium-interactive-banner:hover .banner-action {{
+            background: rgba(15, 38, 92, 0.18);
+            transform: scale(1.05);
+        }}
+        .pulse-dot {{
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            background-color: #10b981;
+            border-radius: 50%;
+            box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
+            animation: pulse-animation 2s infinite;
+            margin-right: 12px;
+        }}
+        @keyframes pulse-animation {{
+            0% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }}
+            70% {{ box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }}
+            100% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }}
+        }}
+        @media (max-width: 768px) {{
+            .premium-interactive-banner {{ flex-direction: column; text-align: center; gap: 15px; }}
+        }}
+        </style>
+        
+        <a href="{chat_url}" target="_self" style="text-decoration: none;">
+            <div class="premium-interactive-banner">
+                <div class="banner-text" style="z-index: 2;">
+                    <h2><span class="pulse-dot"></span> AI Engine Online & Ready</h2>
+                    <p>Your CV is synced! The intelligent assistant is ready for interviews.</p>
+                </div>
+                <div class="banner-action">
+                    Test Live Chat ⚡
+                </div>
+            </div>
+        </a>
+        """, unsafe_allow_html=True)
+        
         st.subheader("Upload area:")
         col1, col2 = st.columns(2)
         
@@ -555,10 +558,13 @@ else:
                     if st.button("✅ Submit PDF & Print to Console"):
                         if uploaded_file:
                             try:
+                                print(uploaded_file)
                                 reader = pypdf.PdfReader(uploaded_file)
                                 full_text = ""
                                 for page in reader.pages:
+                                    
                                     full_text += page.extract_text()
+                                    print(full_text)
                             
                                 
                                 st.success("✅ Textul PDF-ului a fost trimis în consolă!")
@@ -584,6 +590,7 @@ else:
 
 
                             except Exception as e:
+
                                 st.error(f"❌ Eroare la citirea PDF-ului: {e}")
                         else:
                             st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
@@ -637,27 +644,178 @@ else:
         st.divider()
         
     elif selected == "Analytics":
-        st.title("📈📊 Analytics Dashboard 🚀✨")
-        st.markdown("<p style='color: #64748b; font-size: 1.1rem;'>Aici poți vedea o imagine de ansamblu a activității tale. 💡</p>", unsafe_allow_html=True)
+        st.title("📈📊 Analytics Dashboard")
         
-        # Metrici cu aspect premium
+        #st.markdown("<p style='color: #64748b; font-size: 1.1rem;'>Aici poți vedea o imagine de ansamblu a activității tale. 💡</p>", unsafe_allow_html=True)
+        st.divider()
+        st.subheader("🤖 LLM Summary Insights (Auto-Generated):")
+        with st.container(border=False):
+            st.markdown("""
+            
+            În urma analizei datelor, se observă un nivel excelent de angajament al utilizatorilor. Întrebările tehnice domină sesiunile de chat, semnificând focusul pe competențele de bază. Mai mult, rata de selecție se menține la un solid **75%**, demonstrând o aliniere puternică între profil și oportunități. Traficul pe pagină a înregistrat o creștere stabilă în această lună, corelată cu ratele de adopție ale interviurilor RAG.
+            """)
+        
+        # Metrici personalizate în cartonașe premium albe
         m1, m2, m3 = st.columns(3)
         with m1:
-            st.metric(label="📄 Total Documente", value="124", delta="+12 din ultima lună")
+            with st.container(border=True):
+                st.metric(label="❓ Total Asked Questions", value="1,342", delta="Live computed")
         with m2:
-            st.metric(label="🎯 Rata de Succes", value="98.5%", delta="2.1%")
+            with st.container(border=True):
+                st.metric(label="👀 Page Accesses", value="12.5K", delta="Live computed")
         with m3:
-            st.metric(label="👥 Utilizatori Activi", value="1,042", delta="-14")
+            with st.container(border=True):
+                st.metric(label="✅ Selectivity Rate", value="75%", delta="Live computed")
             
         st.divider()
-        st.subheader("📈 Evoluția Datelor")
-        st.line_chart([10, 25, 13, 40, 33, 45, 50, 42, 60, 75])
+        col_pie, col_hist = st.columns(2)
+        
+        with col_pie:
+            st.subheader("📊 Category Distribution")
+            
+            # Dictionar Dummy pentru Pie Chart
+            dummy_data = {
+                "Tehnical Questions": 45,
+                "Behavioral Questions": 25,
+                "General Info": 15,
+                "Off-topic": 15
+            }
+            
+            df_pie = pd.DataFrame(list(dummy_data.items()), columns=["Category", "Value"])
+            
+            # Pie chart Altair elegant (donut chart) cu paletă albastră personalizată
+            pie_chart = alt.Chart(df_pie).mark_arc(innerRadius=50).encode(
+                theta=alt.Theta(field="Value", type="quantitative"),
+                color=alt.Color(field="Category", type="nominal", scale=alt.Scale(range=["#c7d2fe", "#818cf8", "#4f46e5", "#1e3a8a"])),
+                tooltip=["Category", "Value"]
+            ).properties(
+                title="Overview of Interacted Question Types",
+                height=350
+            )
+            
+            with st.container(border=True):
+                st.altair_chart(pie_chart, use_container_width=True, theme="streamlit")
+                
+        with col_hist:
+            st.subheader("📊 Success Metrics")
+            
+            # Dictionar Dummy pentru Histograma (doar 2 chei)
+            dummy_hist = {
+                "Hired": 125,
+                "Not A Fit": 13
+            }
+            
+            df_hist = pd.DataFrame(list(dummy_hist.items()), columns=["Status", "Total"])
+            
+            bar_chart = alt.Chart(df_hist).mark_bar(size=60, cornerRadiusTopLeft=8, cornerRadiusTopRight=8).encode(
+                x=alt.X('Status', sort=None, title=''),
+                y=alt.Y('Total', title='Candidates / Users'),
+                color=alt.Color('Status', scale=alt.Scale(range=["#c7d2fe", "#818cf8"])),
+                tooltip=['Status', 'Total']
+            ).properties(
+                title="Current Selection Ratios",
+                height=350
+            )
+            
+            with st.container(border=True):
+                st.altair_chart(bar_chart, use_container_width=True, theme="streamlit")
+        
+        st.divider()
+        col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
+        with col_r2:
+            if st.button("🔄 Refresh Data", type="primary", use_container_width=True):
+                st.rerun()
 
     elif selected == "Global Search":
         st.title("🕵️‍♂️🔍 Căutare Globală 🌍")
         st.markdown("<p style='color: #64748b;'>Caută rapid orice document, informație sau setare în întreaga platformă. ⚡</p>", unsafe_allow_html=True)
-        st.text_input("🔎 Introdu termenul de căutare...", placeholder="Ex: Factură Ianuarie 2024")
+        query = st.text_input("🔎 Introdu termenul de căutare...", placeholder="Ex: Factură Ianuarie 2024")
+        
         st.info("💡 Sfat: Poți folosi ghilimele pentru o căutare exactă.")
+
+        if query:
+            with st.spinner("Caut informații pe internet... 🌐"):
+                try:
+                    query_results = search_on_internet(query)
+                except Exception as e:
+                    query_results = []
+                    st.error(f"Eroare la comanda de search: {e}")
+                
+            if query_results:
+                #st.success(f"✅ Am găsit {len(query_results)} rezultate relevante pentru căutarea ta:")
+                
+                # CSS personalizat pentru cardurile de tip "Home", dar statice și luminoase
+                st.markdown("""
+                <style>
+                    .search-finding-card {
+                        background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(240, 248, 255, 0.95) 100%);
+                        backdrop-filter: blur(8px);
+                        border-radius: 16px;
+                        padding: 20px 25px;
+                        margin-top: 20px;
+                        margin-bottom: 20px;
+                        box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+                        border: 1px solid rgba(255,255,255,0.8);
+                        transition: transform 0.2s ease, box-shadow 0.2s ease;
+                        display: block;
+                        width: 100%;
+                    }
+                    .search-finding-card:hover {
+                        transform: translateY(-3px);
+                        box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+                    }
+                    .search-finding-card h4 {
+                        margin-top: 0;
+                        margin-bottom: 8px;
+                        font-weight: 600;
+                        font-family: inherit;
+                    }
+                    .search-finding-card a {
+                        color: #0f265c !important; /* Culoarea dark blue de la Home */
+                        text-decoration: none;
+                        font-size: 1.15rem;
+                    }
+                    .search-finding-card a:hover {
+                        text-decoration: underline;
+                    }
+                    .search-finding-card .url-text {
+                        color: #10b981;
+                        font-size: 0.85rem;
+                        margin-bottom: 12px;
+                        font-weight: 500;
+                    }
+                    .search-finding-card .content-text {
+                        color: #475569;
+                        font-size: 0.95rem;
+                        line-height: 1.6;
+                        font-weight: 400;
+                    }
+                </style>
+                """, unsafe_allow_html=True)
+                
+                for finding in query_results:
+                    title = finding.get('title', 'Fără Titlu')
+                    url = finding.get('url', '#')
+                    content = finding.get('content', '')
+                    
+                    # Curățăm textul
+                    clean_content = str(content).replace("\\n", " ").replace("  ", " ").strip()
+                    
+                    # Randăm un card personalizat 1 la 1 cu stilul din Home
+                    card_html = f'''
+                    <div class="search-finding-card">
+                        <h4><a href="{url}" target="_blank">{title}</a></h4>
+                        <div class="url-text">{url}</div>
+                        <div class="content-text">{clean_content}</div>
+                    </div>
+                    '''
+                    st.markdown(card_html, unsafe_allow_html=True)
+                st.success(f"✅ Am găsit {len(query_results)} rezultate relevante pentru căutarea ta:")
+            else:
+                st.warning("⚠️ Nu s-a găsit niciun rezultat. Încearcă alte cuvinte cheie.")
+            
+
+
 
     elif selected == "Settings":
         st.title("⚙️🛠️ Setări Platformă 🛡️")
@@ -700,4 +858,36 @@ else:
                         st.session_state.user_data['pass'] = new_password
                         
                     st.success("✅ Datele de autentificare au fost actualizate cu succes!")
-                   
+                    
+        st.divider()
+        st.subheader("🗑️ Delete User Account")
+        
+        # Variabilă de sesiune pentru a reține intenția de ștergere
+        if 'delete_user_intent' not in st.session_state:
+            st.session_state.delete_user_intent = False
+
+        if not st.session_state.delete_user_intent:
+            if st.button("🚨 Delete User", type="primary"):
+                st.session_state.delete_user_intent = True
+                st.rerun()
+        else:
+            st.warning("⚠️ Ești sigur? Tastează 'delete' în căsuța de mai jos pentru a confirma.")
+            delete_input = st.text_input("Confirmă ștergerea:", key="delete_user_input")
+            
+            c1, c2 = st.columns(2)
+            with c1:
+                if st.button("✔️ Confirm"):
+                    if delete_input.strip() == "delete":
+
+                        delete_user(st.session_state.current_user)
+
+                        st.success("Deleted!")
+                        st.session_state.logged_in = False
+                        #st.session_state.delete_user_intent = False
+                        st.rerun()
+                    else:
+                        st.error("❌ Trebuie să scrii cuvântul 'delete' pentru a confirma.")
+            with c2:
+                if st.button("❌ Cancel"):
+                    st.session_state.delete_user_intent = False
+                    st.rerun()

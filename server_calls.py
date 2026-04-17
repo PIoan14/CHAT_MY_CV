@@ -1,11 +1,26 @@
 import requests
 import json
 import logging
+import time
 
 LOGGER = logging.getLogger(__name__)
 
+def delete_user(user_id):
 
-def chat_RAG_llm(user_id, question):
+    headers = {
+    'accept': 'application/json',
+    'content-type': 'application/x-www-form-urlencoded',
+    }
+
+    params = {
+        'document_id': user_id,
+    }
+
+    response = requests.post('http://localhost:8000/deleteUser', params=params, headers=headers)
+    return response.status_code
+    
+
+def chat_RAG_llm(user_id, question, RAG=False):
 
     headers = {
     'accept': 'application/json',
@@ -14,11 +29,15 @@ def chat_RAG_llm(user_id, question):
     params = {
         'doc_id': user_id,
         'question': question,
+        'RAG': RAG,
     }
 
     try:
-        response = requests.post('http://127.0.0.1:8000/chatCompletions', params=params, headers=headers)
-        return response.json()["message"]
+        response = requests.post('http://127.0.0.1:8000/chatCompletions', params=params, headers=headers, stream=True)
+       
+        for chunk in response.iter_content(chunk_size=1):
+            if chunk:
+                yield chunk.decode("utf-8") 
     except Exception as e:
         LOGGER.error(f"Error in chat_RAG_llm: {e}")
 
