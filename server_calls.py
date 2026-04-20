@@ -2,6 +2,9 @@ import requests
 import json
 import logging
 import time
+from config import get_config
+
+config = get_config()
 
 LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +19,7 @@ def delete_user(user_id):
         'document_id': user_id,
     }
 
-    response = requests.post('http://localhost:8000/deleteUser', params=params, headers=headers)
+    response = requests.post(f'{config['url']['public']}/deleteUser', params=params, headers=headers)
     return response.status_code
     
 
@@ -33,7 +36,7 @@ def chat_RAG_llm(user_id, question, RAG=False):
     }
 
     try:
-        response = requests.post('http://127.0.0.1:8000/chatCompletions', params=params, headers=headers, stream=True)
+        response = requests.post(f'{config['url']['public']}/chatCompletions', params=params, headers=headers, stream=True)
        
         for chunk in response.iter_content(chunk_size=1):
             if chunk:
@@ -56,7 +59,7 @@ def login_user(username, password):
     }
 
     try:
-        response = requests.post('http://127.0.0.1:8000/loginUser', headers=headers, json=json_data)
+        response = requests.post(f'{config['url']['public']}/loginUser', headers=headers, json=json_data)
         return response
     except Exception as e:
         LOGGER.error(f"Error in register_user: {e}")
@@ -75,7 +78,7 @@ def register_user(username, hashed_password):
     }
 
     try:
-        response = requests.post('http://127.0.0.1:8000/registerUser', headers=headers, json=json_data)
+        response = requests.post(f'{config['url']['public']}/registerUser', headers=headers, json=json_data)
         return response.status_code
     except Exception as e:
         LOGGER.error(f"Error in register_user: {e}")
@@ -95,7 +98,7 @@ def update_user(userID, element, value):
     }
 
     try:
-        response = requests.post('http://127.0.0.1:8000/updateUser', headers=headers, params=params)
+        response = requests.post(f'{config['url']['public']}/updateUser', headers=headers, params=params)
         return response.status_code
     except Exception as e:
         LOGGER.error(f"Error in update_user: {e}")
