@@ -63,8 +63,17 @@ st.markdown(f"""
     .stApp > header {{
         display: none !important;
     }}
+    [data-testid="stAppViewContainer"] {{
+        background: linear-gradient(180deg, #ffffff 0%, #f5f3ff 80%, #ede9fe 100%) !important;
+        background-attachment: fixed !important;
+    }}
+    [data-testid="stSidebar"] {{
+        background-color: #ffffff !important;
+        border-right: 1px solid rgba(0,0,0,0.05);
+    }}
     .stApp {{
         margin-top: 50px;
+        background: transparent !important;
     }}
     
     /* Ridica continutul mai sus ca sa nu fie gap mare dupa Navbar */
@@ -178,6 +187,9 @@ else:
             icons=["house", "graph-up", "search", "gear"],
             menu_icon="cast",
             default_index=0,
+            styles={
+                "nav-link-selected": {"background-color": "#4f46e5"},
+            }
         )
         
         if st.button("🚪 Logout"):
@@ -204,26 +216,102 @@ else:
         # Titlu mai mic, neincadrat in card
         #st.markdown(f"<h3 style='margin-bottom: 0;'>Welcome, {st.session_state.user_data['name']}! 👋🎉</h3>", unsafe_allow_html=True)
         
-        # Paragraf stilizat descriptiv despre aplicatie, cu emoji-uri si design premium
+        # CSS Global pentru Dropdown-uri Premium si integrare Card Welcome
         st.markdown(f"""
-        <div style='background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(200, 225, 255, 0.95) 100%); 
-                    backdrop-filter: blur(4px);
-                    padding: 18px 25px; 
-                    border-radius: 12px; 
-                    border-left: 5px solid #0f265c;
-                    margin-top: 15px;
-                    margin-bottom: 25px; 
-                    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
-                    color: #0f265c; 
-                    font-size: 1.05rem; 
-                    line-height: 1.6;
-                    font-weight: 500;'>
-                <h3 style='margin-bottom: 0;'>Welcome, {st.session_state.user_data['name']}! 👋🎉</h3>
-            ✨ <strong>Transform your standard CV into a powerful AI-driven interactive experience!</strong> 🚀<br> 
-            Simply upload your document 📄, highlight your best skills 💡, and our intelligent engine 🤖 will craft a personalized knowledge base instantly. Generate your unique link 🔗 and share it with recruiters so they can chat directly with your virtual profile and discover why you're the perfect fit! 🎯
+        <style>
+            /* CSS PREMIUM PENTRU EXPANDERE (DROPDOWN-URI) STREAMLIT */
+            [data-testid="stExpander"] {{
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%) !important;
+                border-radius: 16px !important;
+                border: 1px solid rgba(226, 232, 240, 0.8) !important;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02), 0 10px 15px -3px rgba(0, 0, 0, 0.05) !important;
+                transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+                overflow: hidden !important;
+            }}
+            [data-testid="stExpander"]:hover {{
+                box-shadow: 0 12px 25px -5px rgba(15, 38, 92, 0.12) !important;
+                border-color: rgba(79, 70, 229, 0.3) !important;
+            }}
+            [data-testid="stExpanderDetails"] {{
+                padding: 20px !important;
+            }}
+            /* Header-ul (summary) expanderului */
+            [data-testid="stExpander"] summary {{
+                padding: 15px 20px !important;
+                background-color: transparent !important; /* eliminam hover-ul gri default */
+            }}
+            [data-testid="stExpander"] summary p {{
+                font-weight: 700 !important;
+                color: #0f172a !important;
+                font-size: 1.15rem !important;
+            }}
+            [data-testid="stExpander"] svg {{
+                fill: #4f46e5 !important;
+                stroke: #4f46e5 !important;
+            }}
+
+            /* --- Formatare Titlu --- */
+            .welcome-title {{
+                margin: 0;
+                font-size: 1.8rem;
+                font-weight: 800;
+                color: #0f172a;
+                background: linear-gradient(90deg, #0f265c, #4f46e5);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                display: inline-block;
+                letter-spacing: -0.5px;
+            }}
+            .system-pills {{
+                display: flex;
+                gap: 15px;
+                flex-wrap: wrap;
+                margin-top: 15px;
+                padding-top: 20px;
+                border-top: 1px solid rgba(0,0,0,0.05);
+            }}
+            @keyframes pulse {{
+                0% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }}
+                70% {{ box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }}
+                100% {{ box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }}
+            }}
+            @media (max-width: 768px) {{
+                .welcome-title {{ font-size: 1.8rem; }}
+            }}
+        </style>
+        
+        <div style="margin: 10px 0 30px 0; padding: 0 5px;">
+            <h3 class="welcome-title">Welcome, {st.session_state.user_data['name']}!👋🎉</h3>
+            <div style="display: flex; flex-direction: column; gap: 15px; margin: 15px 0;">
+                <div style="font-size: 1.25rem; font-weight: 600; color: #1e293b; line-height: 1.4;">
+                    <span style="background: linear-gradient(135deg, #4f46e5, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">✨ Transform your standard CV</span>
+                    into a powerful AI interactive experience! 🚀
+                </div>
+                <div style="background: rgba(255, 255, 255, 0.3); border-left: 4px solid #4f46e5; border-radius: 12px; padding: 18px 25px; display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(5px);">
+                    <div style="display: flex; align-items: flex-start; gap: 15px;">
+                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">📄</span>
+                        <div style="font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>Upload your document:</strong> Highlight your best tech skills, projects, and experiences.</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 15px;">
+                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🚀</span>
+                        <div style="font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>AI Engine Magic:</strong> Our intelligent engine crafts a highly personalized knowledge base instantly.</div>
+                    </div>
+                    <div style="display: flex; align-items: flex-start; gap: 15px;">
+                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🔗</span>
+                        <div style="font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>Share & Impress:</strong> Get your unique link so recruiters can chat directly with your virtual profile and discover why you're the perfect fit! 🎯</div>
+                    </div>
+                </div>
+            </div>
+            <div class="system-pills">
+                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                    <span style="display: inline-block; width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px #10b981; animation: pulse 2s infinite;"></span> System Online
+                </span>
+                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(59, 130, 246, 0.2);">🧠 Neural Engine: Advanced</span>
+                <span style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(139, 92, 246, 0.2);">🔒 Enterprise Security</span>
+                <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 6px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(245, 158, 11, 0.2);">⚡ Optimized Latency</span>
+            </div>
         </div>
         """, unsafe_allow_html=True)
-
         
         # CSS pentru cardurile rotative (inaltime redusa la jumatate)
         css_stil_carduri = """
@@ -266,7 +354,7 @@ else:
                 border: 1px solid rgba(255,255,255,0.08);
             }
             .flip-card-front {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(200, 225, 255, 0.95) 100%);
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(225, 210, 255, 0.95) 100%) !important;
                 backdrop-filter: blur(8px);
                 color: #0f265c;
             }
@@ -409,6 +497,7 @@ else:
                 st.markdown(card_4, unsafe_allow_html=True)
             
         # Sectiunea de Chat URL plasata exact sub randul de carduri
+        
         with st.expander("🔗 Check your CV Chat url", expanded=False):
             st.code("http://localhost:8501"+f"{chat_url}")
             
@@ -447,7 +536,7 @@ else:
         st.markdown(f"""
         <style>
         .premium-interactive-banner {{
-            background: linear-gradient(135deg, rgba(240, 248, 255, 0.98) 0%, rgba(200, 230, 255, 0.95) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(225, 210, 255, 0.95) 100%) !important;
             backdrop-filter: blur(8px);
             border-radius: 16px;
             padding: 20px 30px;
@@ -473,7 +562,7 @@ else:
             position: absolute;
             top: 0; left: -100%;
             width: 50%; height: 100%;
-            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(225, 210, 255, 0.95) 100%) !important;
             transform: skewX(-25deg);
             animation: shine 6s infinite;
         }}
@@ -542,8 +631,21 @@ else:
             </div>
         </a>
         """, unsafe_allow_html=True)
+        st.divider()
+        st.markdown("""
+        <!-- Blob-uri decorative invizibile structural, dar care dau un gradient fain spatiului gol din jumatatea inferioara -->
+        <div style="position: relative; width: 100%; pointer-events: none; z-index: -1;">
+            <div style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 60%); top: 50px; left: -150px; border-radius: 50%;"></div>
+            <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(236, 72, 153, 0.04) 0%, transparent 60%); top: 150px; right: -200px; border-radius: 50%;"></div>
+        </div>
         
-        st.subheader("Upload area:")
+        <div style="margin-top: 40px; margin-bottom: 25px;">
+            <span style="background: rgba(79, 70, 229, 0.1); color: #4f46e5; padding: 8px 25px; border-radius: 30px; font-size: 1.15rem; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; border: 1px solid rgba(79, 70, 229, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                <span style="font-size: 1.4rem;">📂</span> Upload Area
+            </span>
+            <div style="margin: 8px 0 0 10px; color: #64748b; font-size: 0.95rem; font-weight: 500;">Încarcă documentele tale pentru a antrena asistentul AI</div>
+        </div>
+        """, unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         
         with col1:
@@ -555,7 +657,7 @@ else:
                     st.subheader("📄 PDF Text Extractor 🚀")
                     uploaded_file = st.file_uploader("📂 Încarcă un PDF", type="pdf")
                 
-                    if st.button("✅ Submit PDF & Print to Console"):
+                if st.button("✅ Submit PDF & Print to Console"):
                         if uploaded_file:
                             try:
                                 print(uploaded_file)
@@ -621,9 +723,18 @@ else:
                                 st.error(f"❌ Eroare la citirea fișierului: {e}")
                         else:
                             st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
-                        
-        st.subheader("Edit area:")
-        st.text("In the case of the first upload of some documents, you will be able to see the extracted content after you refresh the page!")
+        st.divider()
+        st.markdown("""
+        <div style="margin-top: 50px; margin-bottom: 15px;">
+            <span style="background: rgba(245, 158, 11, 0.1); color: #d97706; padding: 8px 25px; border-radius: 30px; font-size: 1.15rem; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
+                <span style="font-size: 1.4rem;">✏️</span> Edit Area
+            </span>
+            <div style="margin: 8px 0 0 10px; color: #64748b; font-size: 0.95rem; font-weight: 500;">Ajustează și verifică textul extras automat</div>
+        </div>
+        <div style="background: rgba(245, 158, 11, 0.08); border-left: 4px solid #f59e0b; padding: 14px 20px; border-radius: 8px; color: #b45309; margin-bottom: 30px; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <span style="font-size: 1.3rem;">💡</span> <span style="line-height:1.5;"><strong>Notă:</strong> La prima încărcare a documentelor noi, extragerea se va realiza cu succes. Dacă nu vezi textul extras imediat, este nevoie să dai un scurt <strong>Refresh la pagină</strong>!</span>
+        </div>
+        """, unsafe_allow_html=True)
         with st.expander("✏️ Editează textul extras din PDF:", expanded=False):
 
             pdf_edited_text = st.text_area("Câmp Text Editable", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor", label_visibility="collapsed")
@@ -642,6 +753,15 @@ else:
                 st.success("✅ Conținutul TXT/MD a fost actualizat!")
 
         st.divider()
+        
+        # --- FOOTER PROFESIONAL ---
+        st.markdown("""
+        <div style="text-align: center; margin-top: 60px; padding-top: 30px; margin-bottom: 20px; border-top: 1px solid rgba(0,0,0,0.05); color: #94a3b8; font-size: 0.85rem; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-weight: 700; color: #64748b; font-size: 1.1rem; letter-spacing: 0.5px;">PROIECT PRO <span style="color: #4f46e5;">AI</span></div>
+            <div>Made with ❤️ by The AI CV Team</div>
+            <div style="font-size: 0.75rem; opacity: 0.7;">Transforming Resumes into Conversations • © 2026 All rights reserved</div>
+        </div>
+        """, unsafe_allow_html=True)
         
     elif selected == "Analytics":
         st.title("📈📊 Analytics Dashboard")
