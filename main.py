@@ -15,12 +15,33 @@ from collections import Counter
 import altair as alt
 from web_search import search_on_internet
 import json
-
+import pdfplumber
 
 st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
+import secrets
+
+
+query_params = st.query_params
+
+if "session" not in query_params:
+    new_token = secrets.token_hex(16)
+    st.query_params["session"] = new_token
+    token_activ = new_token
+else:
+    token_activ = query_params["session"]
+
+from pathlib import Path
+
+def create_session_file(path):
+    path = Path(path)
+    
+    path.parent.mkdir(parents=True, exist_ok=True)
+query_params = st.query_params
+
+
 try :
-    with open("session_state.json", "r") as f:
+    with open(f"{token_activ}/session_state.json", "r") as f:
         login_state = json.load(f)
     if login_state["status"] == "false":
         st.session_state.logged_in = False
@@ -164,7 +185,8 @@ if not st.session_state.logged_in:
                             st.session_state.current_user = ""
 
                         login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
-                        with open("session_state.json", "w") as f:
+                        create_session_file(f"{token_activ}/session_state.json")
+                        with open(f"{token_activ}/session_state.json", "w") as f:
                             json.dump(login_state, f, indent=4)
                         st.rerun()
                     else:
@@ -192,11 +214,11 @@ if not st.session_state.logged_in:
                             if 'current_user' not in st.session_state:
                                 st.session_state.current_user = ""
                             login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
-                            with open("session_state.json", "w") as f:
+                            with open(f"{token_activ}/session_state.json", "w") as f:
                                 json.dump(login_state, f, indent=4)
                             st.rerun()
                         else:
-                            st.error("❌ Credentiale incorecte!")
+                            st.error("❌ Invalid credentials!")
                     
 else:
    
@@ -218,7 +240,7 @@ else:
         if st.button("🚪 Logout"):
             st.session_state.logged_in = False
             login_state = {"status": "false", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
-            with open("session_state.json", "w") as f:
+            with open(f"{token_activ}/session_state.json", "w") as f:
                 json.dump(login_state, f, indent=4)
             st.rerun()
 
@@ -717,12 +739,51 @@ else:
 
                                 update_user(st.session_state.current_user, "CV_content", st.session_state.pdf_extracted_text)
 
+                                login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                                with open(f"{token_activ}/session_state.json", "w") as f:
+                                    json.dump(login_state, f, indent=4)
+
 
                             except Exception as e:
 
-                                st.error(f"❌ Eroare la citirea PDF-ului: {e}")
+                                st.error(f"❌ Try with with pdfplumber")
+
+                                try:
+                                    with pdfplumber.open(uploaded_file) as pdf:
+                                        full_text = ""
+                                        for page in pdf.pages:
+                                            full_text += page.extract_text()
+                                            print(full_text)
+                                        
+                                        st.success("✅ PDF text submitted to console!")
+
+                                    st.session_state.pdf_extracted_text = full_text
+
+                                    st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
+
+                                    phrases = st.session_state.pdf_extracted_text.split(". ")
+
+                                    final_pdf_show = ""
+
+                                    for phrase in phrases:
+
+                                        if not phrase.endswith("."):
+                                            final_pdf_show += f"{phrase}.\n"
+                                        else:
+                                            final_pdf_show += f"{phrase}\n"
+
+                                    st.session_state.pdf_extracted_text = final_pdf_show
+
+                                    update_user(st.session_state.current_user, "CV_content", st.session_state.pdf_extracted_text)
+
+                                    login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                                    with open(f"{token_activ}/session_state.json", "w") as f:
+                                        json.dump(login_state, f, indent=4)
+
+                                except Exception as e:
+                                    st.error(f"❌ error: {e}")
                         else:
-                            st.warning("⚠️ Te rog să încarci un fișier PDF înainte de a apăsa butonul!")
+                            st.warning("⚠️ Please upload a PDF file before pressing the button!")
 
         with col2:
             #st.divider()
