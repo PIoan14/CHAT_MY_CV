@@ -8,6 +8,23 @@ config = get_config()
 
 LOGGER = logging.getLogger(__name__)
 
+
+def get_analytics(user_id):
+    print(user_id)
+    headers = {
+    'accept': 'application/json',
+    'content-type': 'application/x-www-form-urlencoded',
+    }
+
+    params = {
+        'doc_id': user_id,
+    }
+
+    response = requests.post(f'{config['url']['public']}/chatAnalytics', params=params, headers=headers)
+    print(response.status_code)
+    return response.json()
+
+
 def delete_user(user_id):
 
     headers = {

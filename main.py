@@ -9,6 +9,7 @@ import altair as alt
 from web_search import search_on_internet
 import json
 import pdfplumber
+from server_calls import get_analytics
 
 st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
@@ -859,78 +860,105 @@ else:
         """, unsafe_allow_html=True)
         
     elif selected == "Analytics":
-        st.title("📈📊 Analytics Dashboard")
-        
-        #st.markdown("<p style='color: #64748b; font-size: 1.1rem;'>Aici poți vedea o imagine de ansamblu a activității tale. 💡</p>", unsafe_allow_html=True)
+        st.markdown("<h1 style='font-family: Comic Sans MS, serif; color: #0f172a; margin-top: 10px; margin-bottom: 0px;'>📈📊 Analytics Dashboard</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748b; font-size: 1.1rem; font-family: Comic Sans MS, serif; margin-bottom: 20px;'>Monitor insights and engagement based on live interactions with your AI resume. 🚀</p>", unsafe_allow_html=True)
         st.divider()
-        st.subheader("🤖 LLM Summary Insights (Auto-Generated):")
-        with st.container(border=False):
-            st.markdown("""
-            
-            În urma analizei datelor, se observă un nivel excelent de angajament al utilizatorilor. Întrebările tehnice domină sesiunile de chat, semnificând focusul pe competențele de bază. Mai mult, rata de selecție se menține la un solid **75%**, demonstrând o aliniere puternică între profil și oportunități. Traficul pe pagină a înregistrat o creștere stabilă în această lună, corelată cu ratele de adopție ale interviurilor RAG.
-            """)
         
-        # Metrici personalizate în cartonașe premium albe
-        m1, m2, m3 = st.columns(3)
-        with m1:
-            with st.container(border=True):
-                st.metric(label="❓ Total Asked Questions", value="1,342", delta="Live computed")
-        with m2:
-            with st.container(border=True):
-                st.metric(label="👀 Page Accesses", value="12.5K", delta="Live computed")
-        with m3:
-            with st.container(border=True):
-                st.metric(label="✅ Selectivity Rate", value="75%", delta="Live computed")
+        analytics = get_analytics(st.session_state.current_user)
+        to_use = json.loads(analytics)
+
+        try:    
+            category_data = {k:v for k,v in to_use.items() if k != 'summary'}
+        
             
-        st.divider()
+            on_topic = 0
+            of_topic = 0
+            df_chart_data = []
+
+            for k, v in category_data.items():
+                # Handle the case where the API dict value returns numeric or dict
+                current_val = v.get('count', 0) if isinstance(v, dict) else v
+                if "off topic" in str(k).lower() or "off_topic" in str(k).lower():
+                    of_topic = current_val
+                else:
+                    on_topic += current_val
+                
+                df_chart_data.append({"Category": str(k).replace("_", " ").title(), "Value": current_val})
+            
+            total_questions = on_topic + of_topic
+            on_topic_rate = round(on_topic / total_questions * 100, 1) if total_questions > 0 else 0
+        except:
+            st.rerun()
+        # --- Premium Box for Summary ---
+        st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); border-radius: 16px; padding: 25px 30px; border-left: 6px solid #4f46e5; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); margin-bottom: 40px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🤖</span>
+                <h3 style="margin: 0; color: #1e3a8a; font-size: 1.4rem; font-family: Arahoni, serif; font-weight: 800;">LLM Executive Summary</h3>
+            </div>
+            <p style="margin: 0; color: #334155; font-size: 1.1rem; line-height: 1.6; font-family: Comic Sans MS, serif;">
+                {to_use.get('summary', 'Nu există suficiente date în sumar momentan.')}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # --- Custom HTML Metric Cards ---
+        st.markdown(f"""
+        <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #6366f1, #3b82f6);"></div>
+                <div style="font-size: 2.2rem; margin-bottom: 8px;">❓</div>
+                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Total Questions identified as relevant</div>
+                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{total_questions}</div>
+            </div>
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #f43f5e, #fda4af);"></div>
+                <div style="font-size: 2.2rem; margin-bottom: 8px;">👀</div>
+                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Off Topic Questions</div>
+                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{of_topic}</div>
+            </div>
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #10b981, #34d399);"></div>
+                <div style="font-size: 2.2rem; margin-bottom: 8px;">✅</div>
+                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">On Topic Rate</div>
+                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{on_topic_rate}%</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+            
         col_pie, col_hist = st.columns(2)
         
         with col_pie:
-            st.subheader("📊 Category Distribution")
+            st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📊 Category Distribution</h4>", unsafe_allow_html=True)
+            df_pie = pd.DataFrame(df_chart_data)
             
-            # Dictionar Dummy pentru Pie Chart
-            dummy_data = {
-                "Tehnical Questions": 45,
-                "Behavioral Questions": 25,
-                "General Info": 15,
-                "Off-topic": 15
-            }
-            
-            df_pie = pd.DataFrame(list(dummy_data.items()), columns=["Category", "Value"])
-            
-            # Pie chart Altair elegant (donut chart) cu paletă albastră personalizată
-            pie_chart = alt.Chart(df_pie).mark_arc(innerRadius=50).encode(
+            # Pie chart Altair elegant
+            pie_chart = alt.Chart(df_pie).mark_arc(innerRadius=60, cornerRadius=3).encode(
                 theta=alt.Theta(field="Value", type="quantitative"),
-                color=alt.Color(field="Category", type="nominal", scale=alt.Scale(range=["#c7d2fe", "#818cf8", "#4f46e5", "#1e3a8a"])),
+                color=alt.Color(field="Category", type="nominal", scale=alt.Scale(scheme='category20')),
                 tooltip=["Category", "Value"]
             ).properties(
-                title="Overview of Interacted Question Types",
-                height=350
-            )
+                height=400
+            ).configure_view(strokeWidth=0)
             
             with st.container(border=True):
                 st.altair_chart(pie_chart, use_container_width=True, theme="streamlit")
                 
         with col_hist:
-            st.subheader("📊 Success Metrics")
+            st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📈 Interaction Status</h4>", unsafe_allow_html=True)
+            df_hist = pd.DataFrame([
+                {"Status": "Related to Expertise", "Total": on_topic},
+                {"Status": "Off Topic", "Total": of_topic}
+            ])
             
-            # Dictionar Dummy pentru Histograma (doar 2 chei)
-            dummy_hist = {
-                "Hired": 125,
-                "Not A Fit": 13
-            }
-            
-            df_hist = pd.DataFrame(list(dummy_hist.items()), columns=["Status", "Total"])
-            
-            bar_chart = alt.Chart(df_hist).mark_bar(size=60, cornerRadiusTopLeft=8, cornerRadiusTopRight=8).encode(
+            bar_chart = alt.Chart(df_hist).mark_bar(size=70, cornerRadiusTopLeft=10, cornerRadiusTopRight=10).encode(
                 x=alt.X('Status', sort=None, title=''),
-                y=alt.Y('Total', title='Candidates / Users'),
-                color=alt.Color('Status', scale=alt.Scale(range=["#c7d2fe", "#818cf8"])),
+                y=alt.Y('Total', title='Number of Questions', axis=alt.Axis(grid=False)),
+                color=alt.Color('Status', scale=alt.Scale(range = ["#22c55e", "#f97316"]), legend=None),
                 tooltip=['Status', 'Total']
             ).properties(
-                title="Current Selection Ratios",
-                height=350
-            )
+                height=400
+            ).configure_view(strokeWidth=0)
             
             with st.container(border=True):
                 st.altair_chart(bar_chart, use_container_width=True, theme="streamlit")
@@ -938,23 +966,31 @@ else:
         st.divider()
         col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
         with col_r2:
-            if st.button("🔄 Refresh Data", type="primary", use_container_width=True):
+            st.markdown("<div style='min-height: 10px;'></div>", unsafe_allow_html=True)
+            if st.button("🔄 REFRESH DATA", type="primary", use_container_width=True):
                 st.rerun()
 
     elif selected == "Global Search":
-        st.title("🕵️‍♂️🔍 Căutare Globală 🌍")
-        st.markdown("<p style='color: #64748b;'>Caută rapid orice document, informație sau setare în întreaga platformă. ⚡</p>", unsafe_allow_html=True)
-        query = st.text_input("🔎 Introdu termenul de căutare...", placeholder="Ex: Factură Ianuarie 2024")
+        st.markdown("<h1 style='font-family: Comic Sans MS, serif; color: #0f172a; margin-top: 10px; margin-bottom: 0px;'>🕵️‍♂️🔍 Global Web Search</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748b; font-size: 1.1rem; font-family: Comic Sans MS, serif; margin-bottom: 20px;'>Instantly search your queries across the web and aggregate contextual data. ⚡</p>", unsafe_allow_html=True)
+        st.divider()
         
-        st.info("💡 Sfat: Poți folosi ghilimele pentru o căutare exactă.")
+        query = st.text_input("🔎 Search Term...", placeholder="e.g. Latest Generative AI trends 2026")
+        
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #14b8a6; border-radius: 8px; padding: 12px 18px; margin-top: 5px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.3rem;">💡</span>
+            <span style="color: #334155; font-size: 0.95rem; font-family: Comic Sans MS, serif; font-weight: 500;"><strong>Pro Tip:</strong> You can use exact phrases by wrapping your query in quotes for better precision.</span>
+        </div>
+        """, unsafe_allow_html=True)
 
         if query:
-            with st.spinner("Caut informații pe internet... 🌐"):
+            with st.spinner("Searching the web for information... 🌐"):
                 try:
                     query_results = search_on_internet(query)
                 except Exception as e:
                     query_results = []
-                    st.error(f"Eroare la comanda de search: {e}")
+                    st.error(f"Error executing search query: {e}")
                 
             if query_results:
                 #st.success(f"✅ Am găsit {len(query_results)} rezultate relevante pentru căutarea ta:")
@@ -1025,83 +1061,106 @@ else:
                     </div>
                     '''
                     st.markdown(card_html, unsafe_allow_html=True)
-                st.success(f"✅ Am găsit {len(query_results)} rezultate relevante pentru căutarea ta:")
+                st.success(f"✅ Found {len(query_results)} relevant results for your search:")
             else:
-                st.warning("⚠️ Nu s-a găsit niciun rezultat. Încearcă alte cuvinte cheie.")
+                st.warning("⚠️ No results found. Try using different keywords.")
             
 
 
 
     elif selected == "Settings":
-        st.title("⚙️🛠️ Setări Platformă 🛡️")
-        
-    
-        st.subheader("🔐 Modifică Datele de Autentificare")
-        st.info("💡 Aici îți poți schimba numele de utilizator și parola contului curent.")
-        
+        st.markdown("<h1 style='font-family: Comic Sans MS, serif; color: #0f172a; margin-top: 10px; margin-bottom: 0px;'>⚙️ Settings & Security</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #64748b; font-size: 1.1rem; font-family: Comic Sans MS, serif; margin-bottom: 20px;'>Manage your account credentials and critical platform configurations. 🛡️</p>", unsafe_allow_html=True)
         st.divider()
-        st.subheader("👤 Username change ")
-        with st.form("change_username_form"):
+        
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 15px 20px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
+                <span style="font-size: 1.4rem;">👤</span> Update Profile Details
+            </h3>
+            <p style="margin: 5px 0 0 0; color: #475569; font-size: 0.95rem; line-height: 1.5; font-family: Comic Sans MS, serif;">
+                Modify your username. These changes will reflect immediately upon saving.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("change_username_form", border=True):
             current_username = st.session_state.user_data['name']
             
-            new_username = st.text_input("👤 Noul Username", value=current_username)
+            new_username = st.text_input("👤 New Username", value=current_username)
             
-            submit_creds = st.form_submit_button("💾 Salvează Modificările", use_container_width=True)
+            submit_creds = st.form_submit_button("💾 Save Changes", use_container_width=True)
 
             if submit_creds:
                 if new_username != "":
                     update_user(st.session_state.current_user, "username", new_username)
                     
                     st.session_state.user_data['name'] = new_username
-                    st.success("✅ Numele de utilizator a fost actualizat!")
+                    st.success("✅ Username was successfully updated!")
             
-        st.divider()
-        st.subheader("🔒 Password change ")
-        with st.form("change_password_form"):
-            new_password = st.text_input("🔑 Noua Parolă", type="password", placeholder="Introdu noua parolă (lasă gol pentru a nu o schimba)")
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #8b5cf6; border-radius: 8px; padding: 15px 20px; margin-top: 30px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
+                <span style="font-size: 1.4rem;">🔒</span> Security & Password
+            </h3>
+            <p style="margin: 5px 0 0 0; color: #475569; font-size: 0.95rem; line-height: 1.5; font-family: Comic Sans MS, serif;">
+                Update your authentication password to keep your account safe.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        with st.form("change_password_form", border=True):
+            new_password = st.text_input("🔑 New Password", type="password", placeholder="Enter your new password...")
 
-            confirm_password = st.text_input("🔄 Confirmă Noua Parolă", type="password", placeholder="Repetă parola...")
+            confirm_password = st.text_input("🔄 Confirm New Password", type="password", placeholder="Repeat password...")
             
-            submit_creds = st.form_submit_button("💾 Salvează Modificările", use_container_width=True)
+            submit_creds = st.form_submit_button("💾 Save Changes", use_container_width=True)
             
             if submit_creds:
                 if new_password != confirm_password:
-                    st.error("❌ Parolele introduse nu coincid! Încearcă din nou.")
+                    st.error("❌ Passwords do not match! Please try again.")
                 else:
                     if new_password != "":
                         update_user(st.session_state.current_user, "password", new_password)
                         st.session_state.user_data['pass'] = new_password
                         
-                    st.success("✅ Datele de autentificare au fost actualizate cu succes!")
+                    st.success("✅ Credentials were updated successfully!")
                     
-        st.divider()
-        st.subheader("🗑️ Delete User Account")
+        st.markdown("""
+        <div style="background: linear-gradient(135deg, rgba(254, 242, 242, 0.8) 0%, rgba(254, 226, 226, 0.6) 100%); border-left: 4px solid #ef4444; border-radius: 8px; padding: 15px 20px; margin-top: 40px; margin-bottom: 20px;">
+            <h3 style="margin: 0; color: #7f1d1d; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
+                <span style="font-size: 1.4rem;">🔥</span> Danger Zone
+            </h3>
+            <p style="margin: 5px 0 0 0; color: #991b1b; font-size: 0.95rem; line-height: 1.5; font-family: Comic Sans MS, serif;">
+                Permanently delete your account and all associated data. This action cannot be reversed.
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
         # Variabilă de sesiune pentru a reține intenția de ștergere
         if 'delete_user_intent' not in st.session_state:
             st.session_state.delete_user_intent = False
 
         if not st.session_state.delete_user_intent:
-            if st.button("🚨 Delete User", type="primary"):
+            if st.button("🚨 Delete User Account", type="primary"):
                 st.session_state.delete_user_intent = True
                 st.rerun()
         else:
-            st.warning("⚠️ Ești sigur? Tastează 'delete' în căsuța de mai jos pentru a confirma.")
-            delete_input = st.text_input("Confirmă ștergerea:", key="delete_user_input")
+            st.warning("⚠️ Are you sure? Type 'delete' in the box below to confirm your decision.")
+            delete_input = st.text_input("Confirm deletion:", key="delete_user_input")
             
             c1, c2 = st.columns(2)
             with c1:
-                if st.button("✔️ Confirm"):
+                if st.button("✔️ Confirm & Delete"):
                     if delete_input.strip() == "delete":
 
                         delete_user(st.session_state.current_user)
 
-                        st.success("Deleted!")
+                        st.success("Successfully deleted!")
                         st.session_state.logged_in = False
-                        #st.session_state.delete_user_intent = False
                         st.rerun()
                     else:
-                        st.error("❌ Trebuie să scrii cuvântul 'delete' pentru a confirma.")
+                        st.error("❌ You must type the word 'delete' to confirm.")
             with c2:
                 if st.button("❌ Cancel"):
                     st.session_state.delete_user_intent = False
