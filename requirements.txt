@@ -236,3 +236,4 @@ yarl==1.23.0
     # via aiohttp
 zstandard==0.25.0
     # via langsmith
+pdfplumber==0.11.9

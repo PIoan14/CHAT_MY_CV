@@ -2,16 +2,9 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import pypdf
 from server_calls import register_user, login_user, update_user, delete_user
-import markdown
 import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import streamlit as st
 from collections import Counter
 import re
-import streamlit as st
-import re
-from collections import Counter
 import altair as alt
 from web_search import search_on_internet
 import json
