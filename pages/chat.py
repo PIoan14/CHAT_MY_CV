@@ -192,7 +192,6 @@ if prompt := st.chat_input("Scrie un mesaj aici..."):
     
         with st.chat_message("assistant"):
 
-            # Creăm un placeholder gol
             placeholder = st.empty()
             
             full_response = placeholder.write_stream(response_text)

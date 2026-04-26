@@ -10,6 +10,7 @@ from web_search import search_on_internet
 import json
 import pdfplumber
 from server_calls import get_analytics
+import shutil
 
 st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
@@ -137,7 +138,7 @@ if not st.session_state.logged_in:
     cols = st.columns([1, 2, 1])
     
     with cols[1]:
-        st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>🤗 Welcome Back! ✨</h1>", unsafe_allow_html=True)
+        st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Chat My CV Login! ✨</h1>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 2rem;'>Authenticate yourself to access the platform 🔐</p>", unsafe_allow_html=True)
         tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
         
@@ -236,8 +237,9 @@ else:
         if st.button("🚪 Logout"):
             st.session_state.logged_in = False
             login_state = {"status": "false", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
-            with open(f"{token_activ}/session_state.json", "w") as f:
-                json.dump(login_state, f, indent=4)
+            # with open(f"{token_activ}/session_state.json", "w") as f:
+            #     json.dump(login_state, f, indent=4)
+            shutil.rmtree(token_activ)
             st.rerun()
 
     if selected == "Home":
@@ -258,10 +260,6 @@ else:
             </style>
             """
 
-        # Titlu mai mic, neincadrat in card
-        #st.markdown(f"<h3 style='margin-bottom: 0;'>Welcome, {st.session_state.user_data['name']}! 👋🎉</h3>", unsafe_allow_html=True)
-        
-        # CSS Global pentru Dropdown-uri Premium si integrare Card Welcome
         st.markdown(f"""
         <style>
             /* CSS PREMIUM PENTRU EXPANDERE (DROPDOWN-URI) STREAMLIT */
@@ -451,11 +449,11 @@ else:
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="icon">📄</div>
-            <h3>Upload CV</h3>
-            <div class="flip-btn">Vezi</div>
+            <h3>How to upload your CV</h3>
+            <div class="flip-btn">Check</div>
         </div>
         <div class="flip-card-back">
-            <p>Ready? <b>Upload PDF</b><br>+ extra details to forge your AI 🤖</p>
+            <p>Just scroll down and click on <b>"Upload your CV in PDF format. The same works for summary."</b></p>
         </div>
     </div>
 </label>
@@ -468,7 +466,7 @@ else:
         <div class="flip-card-front">
             <div class="icon">⚙️</div>
             <h3>How it works</h3>
-            <div class="flip-btn">Vezi</div>
+            <div class="flip-btn">Check</div>
         </div>
         <div class="flip-card-back">
             <p>Upload ➔ AI learns 🤖<br>➔ Get Link 🔗<br>➔ <b>Live Chat</b> 💬</p>
@@ -483,11 +481,11 @@ else:
     <div class="flip-card-inner">
         <div class="flip-card-front">
             <div class="icon">✨</div>
-            <h3>Highlight</h3>
-            <div class="flip-btn">Vezi</div>
+            <h3>How to edit CV content</h3>
+            <div class="flip-btn">Check</div>
         </div>
         <div class="flip-card-back">
-            <p>Tech skills 🧠<br>Projects 🚀<br>Experience 💼</p>
+            <p>Edit your skills, projects, and experience in the <b>"Edit CV"</b> section at the bottom of the page. The same works for summary.</p>
         </div>
     </div>
 </label>
@@ -670,6 +668,7 @@ else:
         """, unsafe_allow_html=True)
         #st.divider()
         st.subheader("📂 Documents area", divider='rainbow')
+    
         st.markdown("""
         <!-- Blob-uri decorative invizibile structural, dar care dau un gradient fain spatiului gol din jumatatea inferioara -->
         <div style="position: relative; width: 100%; height: 0; pointer-events: none; z-index: -1;">
@@ -685,13 +684,16 @@ else:
             </span>
         </div>
         """, unsafe_allow_html=True)
+
+        st.info("💡 Tip: After each upload wait until the bike animation from the top of the page stops.")
+        
         col1, col2 = st.columns(2)
         
         with col1:
             #st.divider()
             #st.subheader("📄 PDF Text Extractor 🚀")
 
-            with st.expander("📄 PDF Text Extractor 🚀", expanded=False):
+            with st.expander("📄 Upload your CV here (PDF) 🚀", expanded=False):
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #4f46e5; border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
                     <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
@@ -786,7 +788,7 @@ else:
         with col2:
             #st.divider()
 
-            with st.expander("📝 Markdown/TXT Extractor 🚀", expanded=False):
+            with st.expander("📝 Upload your summary here (markdown file) 🚀", expanded=False):
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
                     <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
@@ -806,15 +808,15 @@ else:
                             
                             update_user(st.session_state.current_user, "text_summary", txt_full_text)
                                 
-                            st.success("✅ Textul fișierului a fost trimis în consolă!")
+                            st.success("✅ The summary has been submitted to the console!")
                                 
                             st.session_state.txt_extracted_text = txt_full_text
 
                         except Exception as e:
-                            st.error(f"❌ Eroare la citirea fișierului: {e}")
+                            st.error(f"❌ Error reading the file: {e}")
                         else:
                             st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
-  
+        st.write("<hr style='border: 1px dashed #f59e0b;'>", unsafe_allow_html=True)
         st.markdown("""
         <div style="margin-top: 50px; margin-bottom: 15px;">
             <span style="background: rgba(245, 158, 11, 0.1); color: #d97706; padding: 8px 25px; border-radius: 30px; font-size: 1.15rem; font-weight: 800; display: inline-flex; align-items: center; gap: 10px; border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.03);">
@@ -825,7 +827,7 @@ else:
             <span style="font-size: 1.3rem;">💡</span> <span style="line-height:1.5;"><strong>Note:</strong> At the first upload of new documents, the extraction will be successful. If you don't see the extracted text immediately, you need to give a short <strong>Refresh to the page</strong>!</span>
         </div>
         """, unsafe_allow_html=True)
-        with st.expander("✏️ Edit PDF text:", expanded=False):
+        with st.expander("✏️ Edit CV content:", expanded=False):
             st.markdown("""
             <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed rgba(0,0,0,0.1);">
                 <h4 style="margin: 0; color: #0f172a; font-size: 1.1rem; font-weight: 700; font-family: Arahoni, serif;">Quick Edit Console (PDF)</h4>
@@ -839,7 +841,7 @@ else:
                 st.success("✅ PDF content was updated!")
 
         #st.divider()
-        with st.expander("✏️ Edit Markdown/Text file content:", expanded=False):
+        with st.expander("✏️ Edit Summary:", expanded=False):
             st.markdown("""
             <div style="margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px dashed rgba(0,0,0,0.1);">
                 <h4 style="margin: 0; color: #0f172a; font-size: 1.1rem; font-weight: 700; font-family: Arahoni, serif;">Quick Edit Console (TXT/MD)</h4>
@@ -900,7 +902,7 @@ else:
             <div style="background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); border-radius: 16px; padding: 25px 30px; border-left: 6px solid #4f46e5; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); margin-bottom: 40px;">
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
                     <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🤖</span>
-                    <h3 style="margin: 0; color: #1e3a8a; font-size: 1.4rem; font-family: Arahoni, serif; font-weight: 800;">LLM Executive Summary</h3>
+                    <h3 style="margin: 0; color: #1e3a8a; font-size: 1.4rem; font-family: Arahoni, serif; font-weight: 800;">LLM hints based on the questions related to your CV</h3>
                 </div>
                 <p style="margin: 0; color: #334155; font-size: 1.1rem; line-height: 1.6; font-family: Comic Sans MS, serif;">
                     {to_use.get('summary', 'Nu există suficiente date în sumar momentan.')}
@@ -951,7 +953,7 @@ else:
                     st.altair_chart(pie_chart, use_container_width=True, theme="streamlit")
                     
             with col_hist:
-                st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📈 Interaction Status</h4>", unsafe_allow_html=True)
+                st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📈 On/Off Topic count</h4>", unsafe_allow_html=True)
                 df_hist = pd.DataFrame([
                     {"Status": "Related to Expertise", "Total": on_topic},
                     {"Status": "Off Topic", "Total": of_topic}
@@ -1173,9 +1175,8 @@ else:
                     if delete_input.strip() == "delete":
 
                         delete_user(st.session_state.current_user)
-
-                        st.success("Successfully deleted!")
                         st.session_state.logged_in = False
+                        shutil.rmtree(token_activ)
                         st.rerun()
                     else:
                         st.error("❌ You must type the word 'delete' to confirm.")
