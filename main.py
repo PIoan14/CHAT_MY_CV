@@ -207,6 +207,8 @@ if not st.session_state.logged_in:
                             st.session_state.user_data = {"user": "admin", "pass": "1234", "name": st.session_state.current_user_name}
                             if 'current_user' not in st.session_state:
                                 st.session_state.current_user = ""
+
+                            create_session_file(f"{token_activ}/session_state.json")
                             login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
                             with open(f"{token_activ}/session_state.json", "w") as f:
                                 json.dump(login_state, f, indent=4)
@@ -865,110 +867,117 @@ else:
         st.divider()
         
         analytics = get_analytics(st.session_state.current_user)
-        to_use = json.loads(analytics)
+        try:
+            to_use = json.loads(analytics)
+        
 
-        try:    
-            category_data = {k:v for k,v in to_use.items() if k != 'summary'}
-        
+            try:    
+                category_data = {k:v for k,v in to_use.items() if k != 'summary'}
             
-            on_topic = 0
-            of_topic = 0
-            df_chart_data = []
+                
+                on_topic = 0
+                of_topic = 0
+                df_chart_data = []
 
-            for k, v in category_data.items():
-                # Handle the case where the API dict value returns numeric or dict
-                current_val = v.get('count', 0) if isinstance(v, dict) else v
-                if "off topic" in str(k).lower() or "off_topic" in str(k).lower():
-                    of_topic = current_val
-                else:
-                    on_topic += current_val
+                for k, v in category_data.items():
+                    # Handle the case where the API dict value returns numeric or dict
+                    current_val = v.get('count', 0) if isinstance(v, dict) else v
+                    if "off topic" in str(k).lower() or "off_topic" in str(k).lower():
+                        of_topic = current_val
+                    else:
+                        on_topic += current_val
+                    
+                    df_chart_data.append({"Category": str(k).replace("_", " ").title(), "Value": current_val})
                 
-                df_chart_data.append({"Category": str(k).replace("_", " ").title(), "Value": current_val})
-            
-            total_questions = on_topic + of_topic
-            on_topic_rate = round(on_topic / total_questions * 100, 1) if total_questions > 0 else 0
-        except:
-            st.rerun()
-        # --- Premium Box for Summary ---
-        st.markdown(f"""
-        <div style="background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); border-radius: 16px; padding: 25px 30px; border-left: 6px solid #4f46e5; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); margin-bottom: 40px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🤖</span>
-                <h3 style="margin: 0; color: #1e3a8a; font-size: 1.4rem; font-family: Arahoni, serif; font-weight: 800;">LLM Executive Summary</h3>
-            </div>
-            <p style="margin: 0; color: #334155; font-size: 1.1rem; line-height: 1.6; font-family: Comic Sans MS, serif;">
-                {to_use.get('summary', 'Nu există suficiente date în sumar momentan.')}
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        # --- Custom HTML Metric Cards ---
-        st.markdown(f"""
-        <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
-            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #6366f1, #3b82f6);"></div>
-                <div style="font-size: 2.2rem; margin-bottom: 8px;">❓</div>
-                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Total Questions identified as relevant</div>
-                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{total_questions}</div>
-            </div>
-            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #f43f5e, #fda4af);"></div>
-                <div style="font-size: 2.2rem; margin-bottom: 8px;">👀</div>
-                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Off Topic Questions</div>
-                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{of_topic}</div>
-            </div>
-            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
-                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #10b981, #34d399);"></div>
-                <div style="font-size: 2.2rem; margin-bottom: 8px;">✅</div>
-                <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">On Topic Rate</div>
-                <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{on_topic_rate}%</div>
-            </div>
-        </div>
-        """, unsafe_allow_html=True)
-            
-        col_pie, col_hist = st.columns(2)
-        
-        with col_pie:
-            st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📊 Category Distribution</h4>", unsafe_allow_html=True)
-            df_pie = pd.DataFrame(df_chart_data)
-            
-            # Pie chart Altair elegant
-            pie_chart = alt.Chart(df_pie).mark_arc(innerRadius=60, cornerRadius=3).encode(
-                theta=alt.Theta(field="Value", type="quantitative"),
-                color=alt.Color(field="Category", type="nominal", scale=alt.Scale(scheme='category20')),
-                tooltip=["Category", "Value"]
-            ).properties(
-                height=400
-            ).configure_view(strokeWidth=0)
-            
-            with st.container(border=True):
-                st.altair_chart(pie_chart, use_container_width=True, theme="streamlit")
-                
-        with col_hist:
-            st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📈 Interaction Status</h4>", unsafe_allow_html=True)
-            df_hist = pd.DataFrame([
-                {"Status": "Related to Expertise", "Total": on_topic},
-                {"Status": "Off Topic", "Total": of_topic}
-            ])
-            
-            bar_chart = alt.Chart(df_hist).mark_bar(size=70, cornerRadiusTopLeft=10, cornerRadiusTopRight=10).encode(
-                x=alt.X('Status', sort=None, title=''),
-                y=alt.Y('Total', title='Number of Questions', axis=alt.Axis(grid=False)),
-                color=alt.Color('Status', scale=alt.Scale(range = ["#22c55e", "#f97316"]), legend=None),
-                tooltip=['Status', 'Total']
-            ).properties(
-                height=400
-            ).configure_view(strokeWidth=0)
-            
-            with st.container(border=True):
-                st.altair_chart(bar_chart, use_container_width=True, theme="streamlit")
-        
-        st.divider()
-        col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
-        with col_r2:
-            st.markdown("<div style='min-height: 10px;'></div>", unsafe_allow_html=True)
-            if st.button("🔄 REFRESH DATA", type="primary", use_container_width=True):
+                total_questions = on_topic + of_topic
+                on_topic_rate = round(on_topic / total_questions * 100, 1) if total_questions > 0 else 0
+            except:
                 st.rerun()
+            # --- Premium Box for Summary ---
+            st.markdown(f"""
+            <div style="background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); border-radius: 16px; padding: 25px 30px; border-left: 6px solid #4f46e5; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); margin-bottom: 40px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <span style="font-size: 1.8rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">🤖</span>
+                    <h3 style="margin: 0; color: #1e3a8a; font-size: 1.4rem; font-family: Arahoni, serif; font-weight: 800;">LLM Executive Summary</h3>
+                </div>
+                <p style="margin: 0; color: #334155; font-size: 1.1rem; line-height: 1.6; font-family: Comic Sans MS, serif;">
+                    {to_use.get('summary', 'Nu există suficiente date în sumar momentan.')}
+                </p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # --- Custom HTML Metric Cards ---
+            st.markdown(f"""
+            <div style="display: flex; gap: 20px; margin-bottom: 40px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #6366f1, #3b82f6);"></div>
+                    <div style="font-size: 2.2rem; margin-bottom: 8px;">❓</div>
+                    <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Total Questions identified as relevant</div>
+                    <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{total_questions}</div>
+                </div>
+                <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #f43f5e, #fda4af);"></div>
+                    <div style="font-size: 2.2rem; margin-bottom: 8px;">👀</div>
+                    <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">Off Topic Questions</div>
+                    <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{of_topic}</div>
+                </div>
+                <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid rgba(0,0,0,0.05); border-radius: 16px; padding: 25px 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 5px; background: linear-gradient(to right, #10b981, #34d399);"></div>
+                    <div style="font-size: 2.2rem; margin-bottom: 8px;">✅</div>
+                    <div style="color: #64748b; font-size: 0.95rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: -apple-system, sans-serif;">On Topic Rate</div>
+                    <div style="color: #0f172a; font-size: 2.6rem; font-weight: 800; font-family: Arahoni, serif; margin-top: 5px;">{on_topic_rate}%</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+                
+            col_pie, col_hist = st.columns(2)
+            
+            with col_pie:
+                st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📊 Category Distribution</h4>", unsafe_allow_html=True)
+                df_pie = pd.DataFrame(df_chart_data)
+                
+                # Pie chart Altair elegant
+                pie_chart = alt.Chart(df_pie).mark_arc(innerRadius=60, cornerRadius=3).encode(
+                    theta=alt.Theta(field="Value", type="quantitative"),
+                    color=alt.Color(field="Category", type="nominal", scale=alt.Scale(scheme='category20')),
+                    tooltip=["Category", "Value"]
+                ).properties(
+                    height=400
+                ).configure_view(strokeWidth=0)
+                
+                with st.container(border=True):
+                    st.altair_chart(pie_chart, use_container_width=True, theme="streamlit")
+                    
+            with col_hist:
+                st.markdown("<h4 style='font-family: Arahoni, serif; color: #1e293b; margin-bottom: 15px;'>📈 Interaction Status</h4>", unsafe_allow_html=True)
+                df_hist = pd.DataFrame([
+                    {"Status": "Related to Expertise", "Total": on_topic},
+                    {"Status": "Off Topic", "Total": of_topic}
+                ])
+                
+                bar_chart = alt.Chart(df_hist).mark_bar(size=70, cornerRadiusTopLeft=10, cornerRadiusTopRight=10).encode(
+                    x=alt.X('Status', sort=None, title=''),
+                    y=alt.Y('Total', title='Number of Questions', axis=alt.Axis(grid=False)),
+                    color=alt.Color('Status', scale=alt.Scale(range = ["#22c55e", "#f97316"]), legend=None),
+                    tooltip=['Status', 'Total']
+                ).properties(
+                    height=400
+                ).configure_view(strokeWidth=0)
+                
+                with st.container(border=True):
+                    st.altair_chart(bar_chart, use_container_width=True, theme="streamlit")
+            
+            st.divider()
+            col_r1, col_r2, col_r3 = st.columns([1, 2, 1])
+        
+            with col_r2:
+                st.markdown("<div style='min-height: 10px;'></div>", unsafe_allow_html=True)
+                if st.button("🔄 REFRESH DATA", type="primary", use_container_width=True):
+                    st.rerun()
+        except Exception as e:
+            #st.markdown(f"<p style='font-family: Comic Sans MS, serif; color: #0f172a; margin-top: 10px; margin-bottom: 0px;'>{analytics}</p>", unsafe_allow_html=True)
+            st.info(analytics)
+            print(e)
 
     elif selected == "Global Search":
         st.markdown("<h1 style='font-family: Comic Sans MS, serif; color: #0f172a; margin-top: 10px; margin-bottom: 0px;'>🕵️‍♂️🔍 Global Web Search</h1>", unsafe_allow_html=True)
@@ -1096,6 +1105,10 @@ else:
                     update_user(st.session_state.current_user, "username", new_username)
                     
                     st.session_state.user_data['name'] = new_username
+                    login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                    #create_session_file(f"{token_activ}/session_state.json")
+                    with open(f"{token_activ}/session_state.json", "w") as f:
+                        json.dump(login_state, f, indent=4)
                     st.success("✅ Username was successfully updated!")
             
         st.markdown("""
@@ -1123,7 +1136,10 @@ else:
                     if new_password != "":
                         update_user(st.session_state.current_user, "password", new_password)
                         st.session_state.user_data['pass'] = new_password
-                        
+                        login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                        #create_session_file(f"{token_activ}/session_state.json")
+                        with open(f"{token_activ}/session_state.json", "w") as f:
+                            json.dump(login_state, f, indent=4)
                     st.success("✅ Credentials were updated successfully!")
                     
         st.markdown("""

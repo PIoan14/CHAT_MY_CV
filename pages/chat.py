@@ -180,7 +180,7 @@ if prompt := st.chat_input("Scrie un mesaj aici..."):
         st.markdown(prompt)
 
     # Generăm răspunsul LLM
-    with st.spinner("Asistentul tastează..."):
+    with st.spinner("Assistant is typing..."):
         time.sleep(1.0) # Mică latență simlată UX
         
         # Menținem complet funcționalitatea existentă RAG_llm
@@ -195,24 +195,10 @@ if prompt := st.chat_input("Scrie un mesaj aici..."):
             # Creăm un placeholder gol
             placeholder = st.empty()
             
-            # Rulăm stream-ul și colectăm răspunsul
-            # Notă: st.write_stream va scrie în pagină, deci îl punem în placeholder
             full_response = placeholder.write_stream(response_text)
             
-            # Imediat după ce s-a terminat stream-ul, înlocuim TOT conținutul 
-            # din placeholder cu varianta formatată corect
             with placeholder.container():
                 kept=afiseaza_tabel_curat(full_response)
-
-            # response_kept = st.write_stream(response_text)
-            # print(response_kept)
-            # afiseaza_tabel_curat(response_kept)
-        #response_kept = fix_markdown_tables(response_kept)
-
-        #raspuns_llm = """Paul has a solid foundation in SQL, with a good level of proficiency, as well as an Oracle Academy award in Database Programming with SQL. Additionally, he holds an ECDL diploma, which showcases his expertise in using tools like Power BI for data analysis projects. Here's a summary of his skills in SQL and diploma: | Skill | Level | | --- | --- | | SQL | Good | | Oracle Academy award in Database Programming with SQL | Awarded | | ECDL diploma | Diploma | These skills demonstrate Paul's potential for working with databases and data analysis, making him a strong candidate for roles that require proficiency in SQL and data management."""
-
-        
-
         
            
     st.session_state[chat_history_key].append({"role": "assistant", "content": kept})
