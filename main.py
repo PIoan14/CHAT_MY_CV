@@ -672,9 +672,11 @@ else:
         st.subheader("📂 Documents area", divider='rainbow')
         st.markdown("""
         <!-- Blob-uri decorative invizibile structural, dar care dau un gradient fain spatiului gol din jumatatea inferioara -->
-        <div style="position: relative; width: 100%; pointer-events: none; z-index: -1;">
-            <div style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 60%); top: 50px; left: -150px; border-radius: 50%;"></div>
-            <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(236, 72, 153, 0.04) 0%, transparent 60%); top: 150px; right: -200px; border-radius: 50%;"></div>
+        <div style="position: relative; width: 100%; height: 0; pointer-events: none; z-index: -1;">
+            <div style="position: absolute; top: 0; left: 0; width: 100%; max-width: 100vw; height: 1200px; overflow: hidden; pointer-events: none;">
+                <div style="position: absolute; width: 500px; height: 500px; background: radial-gradient(circle, rgba(79, 70, 229, 0.05) 0%, transparent 60%); top: 50px; left: -150px; border-radius: 50%;"></div>
+                <div style="position: absolute; width: 600px; height: 600px; background: radial-gradient(circle, rgba(236, 72, 153, 0.04) 0%, transparent 60%); top: 150px; right: -200px; border-radius: 50%;"></div>
+            </div>
         </div>
         
         <div style="margin-top: 40px; margin-bottom: 25px;">
