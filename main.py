@@ -138,7 +138,7 @@ if not st.session_state.logged_in:
     cols = st.columns([1, 2, 1])
     
     with cols[1]:
-        st.markdown("<h1 style='text-align: center; margin-bottom: 0;'>Chat My CV Login! ✨</h1>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; margin-bottom: 0;'>Chat My CV Login! ✨</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #64748b; margin-bottom: 2rem;'>Authenticate yourself to access the platform 🔐</p>", unsafe_allow_html=True)
         tab1, tab2 = st.tabs(["🔑 Login", "📝 Register"])
         
