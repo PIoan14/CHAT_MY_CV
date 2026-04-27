@@ -326,22 +326,22 @@ else:
         <div style="margin: 10px 0 30px 0; padding: 0 5px;">
             <h3 style="font-family: Comic Sans MS, serif;" class="welcome-title">Welcome, {st.session_state.user_data['name']}!👋🎉</h3>
             <div style="font-family: Comic Sans MS, serif; display: flex; flex-direction: column; gap: 15px; margin: 15px 0;">
-                <div style="font-size: 1.25rem; font-weight: 600; color: #1e293b; line-height: 1.4;">
+                <div style="font-size: 1rem; font-weight: 600; color: #1e293b; line-height: 1.4;">
                     <span style="background: linear-gradient(135deg, #4f46e5, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">✨ Transform your standard CV</span>
                     into a powerful AI interactive experience! 🚀
                 </div>
                 <div style="background: rgba(255, 255, 255, 0.3); border-left: 4px solid #4f46e5; border-radius: 12px; padding: 18px 25px; display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(5px);">
                     <div style="display: flex; align-items: flex-start; gap: 15px;">
                         <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">📄</span>
-                        <div style="font-family: Arahoni, serif; font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>Upload your document:</strong> Highlight your best tech skills, projects, and experiences.</div>
+                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>Upload your document:</strong> Highlight your best tech skills, projects, and experiences.</div>
                     </div>
                     <div style="display: flex; align-items: flex-start; gap: 15px;">
                         <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🚀</span>
-                        <div style="font-family: Arahoni, serif; font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>AI Engine Magic:</strong> Our intelligent engine crafts a highly personalized knowledge base instantly.</div>
+                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>AI Engine Magic:</strong> Our intelligent engine crafts a highly personalized knowledge base instantly.</div>
                     </div>
                     <div style="display: flex; align-items: flex-start; gap: 15px;">
                         <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🔗</span>
-                        <div style="font-family: Arahoni, serif; font-size: 1.25rem; color: #334155; line-height: 1.5;"><strong>Share & Impress:</strong> Get your unique link so recruiters can chat directly with your virtual profile and discover why you're the perfect fit! 🎯</div>
+                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>Share & Impress:</strong> Get your unique link so recruiters can chat directly with your virtual profile and discover why you're the perfect fit! 🎯</div>
                     </div>
                 </div>
             </div>
