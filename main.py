@@ -11,6 +11,7 @@ import json
 import pdfplumber
 from server_calls import get_analytics
 import shutil
+import time
 
 st.set_page_config(page_title="Proiect Pro", layout="wide", page_icon="🤗")
 
@@ -442,7 +443,6 @@ else:
         """
         st.markdown(css_stil_carduri, unsafe_allow_html=True)
         
-        # Textul impartit in carduri rotative (pentru un text mai mare si estetic pe spate)
         card_1 = """
 <label class="flip-card">
     <input type="checkbox">
@@ -496,12 +496,12 @@ else:
     <input type="checkbox">
     <div class="flip-card-inner">
         <div class="flip-card-front">
-            <div class="icon">🚀</div>
-            <h3>Why use it</h3>
-            <div class="flip-btn">Vezi</div>
+            <div class="icon">❗</div>
+            <h3>Prerequisites</h3>
+            <div class="flip-btn">Check</div>
         </div>
         <div class="flip-card-back">
-            <p>Stand Out 📢<br><b>Interactive AI</b> ⚡<br>Enable Q&A 💬</p>
+            <p>Both CV and Summary have to be uploaded so that the Chat can answer questions!</p>
         </div>
     </div>
 </label>
@@ -658,7 +658,7 @@ else:
             <div class="premium-interactive-banner">
                 <div class="banner-text" style="z-index: 2;">
                     <h2><span class="pulse-dot"></span> AI Engine Online & Ready</h2>
-                    <p>Your CV is synced! The intelligent assistant is ready for interviews.</p>
+                    <p>When your CV is synced, the intelligent assistant is ready for interviews.</p>
                 </div>
                 <div class="banner-action">
                     Test Live Chat ⚡
@@ -717,9 +717,8 @@ else:
                                     full_text += page.extract_text()
                                     print(full_text)
                             
-                                
-                                st.success("✅ PDF text submitted to console!")
-
+                                st.info("ℹ️ Loading...")
+                        
                                 st.session_state.pdf_extracted_text = full_text
 
                                 st.session_state.pdf_extracted_text = " ".join(line.strip() for line in st.session_state.pdf_extracted_text.splitlines() if line.strip())
@@ -742,6 +741,10 @@ else:
                                 login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
                                 with open(f"{token_activ}/session_state.json", "w") as f:
                                     json.dump(login_state, f, indent=4)
+                                
+                                st.success("✅ PDF text submitted to console!")
+                                time.sleep(2)
+                                st.rerun()
 
 
                             except Exception as e:
@@ -755,7 +758,7 @@ else:
                                             full_text += page.extract_text()
                                             print(full_text)
                                         
-                                        st.success("✅ PDF text submitted to console!")
+                                        st.info("ℹ️ Loading...")
 
                                     st.session_state.pdf_extracted_text = full_text
 
@@ -779,6 +782,10 @@ else:
                                     login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
                                     with open(f"{token_activ}/session_state.json", "w") as f:
                                         json.dump(login_state, f, indent=4)
+                                    
+                                    st.success("✅ PDF text submitted to console!")
+                                    time.sleep(2)
+                                    st.rerun()
 
                                 except Exception as e:
                                     st.error(f"❌ error: {e}")
@@ -805,15 +812,21 @@ else:
                     if uploaded_txt_file:
                         try:
                             txt_full_text = uploaded_txt_file.getvalue().decode("utf-8")
-                            
+                            st.info("ℹ️ Loading...")
                             update_user(st.session_state.current_user, "text_summary", txt_full_text)
-                                
-                            st.success("✅ The summary has been submitted to the console!")
-                                
+                                  
                             st.session_state.txt_extracted_text = txt_full_text
 
+                            login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                            with open(f"{token_activ}/session_state.json", "w") as f:
+                                json.dump(login_state, f, indent=4)
+                            
+                            st.success("✅ The summary has been submitted to the console!")
+                            time.sleep(2)
+                            st.rerun()
+
                         except Exception as e:
-                            st.error(f"❌ Error reading the file: {e}")
+                            st.error(f"❌ Error Updating file: {e}")
                         else:
                             st.warning("⚠️ Te rog să încarci un fișier înainte de a apăsa butonul!")
         st.write("<hr style='border: 1px dashed #f59e0b;'>", unsafe_allow_html=True)
@@ -836,9 +849,17 @@ else:
             """, unsafe_allow_html=True)
             pdf_edited_text = st.text_area("Editable Text Field", value=st.session_state.pdf_extracted_text, height=400, key="pdf_editor", label_visibility="collapsed")
             if st.button("💾 Change PDF Content"):
+
+                st.info("ℹ️ Loading...")
                 st.session_state.pdf_extracted_text = pdf_edited_text
                 update_user(st.session_state.current_user, "CV_content", pdf_edited_text)
+
+                login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                with open(f"{token_activ}/session_state.json", "w") as f:
+                    json.dump(login_state, f, indent=4)
                 st.success("✅ PDF content was updated!")
+                time.sleep(2)
+                st.rerun()
 
         #st.divider()
         with st.expander("✏️ Edit Summary:", expanded=False):
@@ -850,9 +871,17 @@ else:
             """, unsafe_allow_html=True)
             txt_edited_text = st.text_area("Editable Text Field", value=st.session_state.txt_extracted_text, height=400, key="txt_editor", label_visibility="collapsed")
             if st.button("💾 Change TXT Content"):
+
+                st.info("ℹ️ Loading...")
                 st.session_state.txt_extracted_text = txt_edited_text
                 update_user(st.session_state.current_user, "text_summary", txt_edited_text)
+
+                login_state = {"status": "true", "current_user": st.session_state.current_user, "current_user_name": st.session_state.current_user_name, "pdf_extracted_text": st.session_state.pdf_extracted_text, "txt_extracted_text": st.session_state.txt_extracted_text, "user_data": st.session_state.user_data}
+                with open(f"{token_activ}/session_state.json", "w") as f:
+                    json.dump(login_state, f, indent=4)
                 st.success("✅ TXT/MD content was updated!")
+                time.sleep(2)
+                st.rerun()
 
         st.divider()
         
