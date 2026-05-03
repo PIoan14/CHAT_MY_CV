@@ -534,7 +534,7 @@ else:
         # Sectiunea de Chat URL plasata exact sub randul de carduri
         st.divider()
         with st.expander("🔗 Check your CV Chat url", expanded=False):
-            st.code("http://localhost:8501"+f"{chat_url}")
+            st.code("https://chatmycv-production.up.railway.app"+f"{chat_url}")
             
     
 
