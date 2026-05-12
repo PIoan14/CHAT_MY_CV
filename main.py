@@ -331,18 +331,18 @@ else:
                     <span style="background: linear-gradient(135deg, #4f46e5, #ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 800;">✨ Transform your standard CV</span>
                     into a powerful AI interactive experience! 🚀
                 </div>
-                <div style="background: rgba(255, 255, 255, 0.3); border-left: 4px solid #4f46e5; border-radius: 12px; padding: 18px 25px; display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(5px);">
-                    <div style="display: flex; align-items: flex-start; gap: 15px;">
-                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">📄</span>
-                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>Upload your document:</strong> Highlight your best tech skills, projects, and experiences.</div>
+                <div class style="background: rgba(255, 255, 255, 0.3); border-left: 4px solid #4f46e5; border-radius: 12px; padding: 18px 25px; display: flex; flex-direction: column; gap: 12px; backdrop-filter: blur(5px);">
+                   <div style="background: rgba(255, 255, 255, 0.6); border-top: 4px solid #4f46e5; border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease;">
+                        <div style="font-size: 1.1rem; color: #1e293b; margin-bottom: 8px;"><strong>📄 Upload your document</strong></div>
+                        <div style="font-size: 0.95rem; color: #475569; line-height: 1.6;">Highlight your best tech skills, projects, and experiences.</div>
                     </div>
-                    <div style="display: flex; align-items: flex-start; gap: 15px;">
-                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🚀</span>
-                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>AI Engine Magic:</strong> Our intelligent engine crafts a highly personalized knowledge base instantly.</div>
+                    <div style="background: rgba(255, 255, 255, 0.6); border-top: 4px solid #4f46e5; border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease;">
+                        <div style="font-size: 1.1rem; color: #1e293b; margin-bottom: 8px;"><strong>⚙️ AI Engine Magic</strong></div>
+                        <div style="font-size: 0.95rem; color: #475569; line-height: 1.6;">Our intelligent engine crafts a highly personalized knowledge base instantly.</div>
                     </div>
-                    <div style="display: flex; align-items: flex-start; gap: 15px;">
-                        <span style="font-size: 1.4rem; padding-top: 2px; line-height: 1;">🔗</span>
-                        <div style="font-family: Arial, sans-serif; font-size: 1rem; color: #334155; line-height: 1.5;"><strong>Share & Impress:</strong> Get your unique link so recruiters can chat directly with your virtual profile and discover why you're the perfect fit! 🎯</div>
+                    <div style="background: rgba(255, 255, 255, 0.6); border-top: 4px solid #4f46e5; border-radius: 16px; padding: 25px; backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05); transition: transform 0.2s ease;">
+                        <div style="font-size: 1.1rem; color: #1e293b; margin-bottom: 8px;"><strong>🔗 Share & Impress</strong></div>
+                        <div style="font-size: 0.95rem; color: #475569; line-height: 1.6;">Get your unique link so recruiters can chat with your virtual profile. 🎯</div>
                     </div>
                 </div>
             </div>
@@ -693,7 +693,7 @@ else:
             #st.divider()
             #st.subheader("📄 PDF Text Extractor 🚀")
 
-            with st.expander("📄 Upload your CV here (PDF) 🚀", expanded=False):
+            with st.expander("📄 Upload your CV here (PDF) 🚀", expanded=True):
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #4f46e5; border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
                     <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
@@ -795,7 +795,7 @@ else:
         with col2:
             #st.divider()
 
-            with st.expander("📝 Upload your summary here (markdown file) 🚀", expanded=False):
+            with st.expander("📝 Upload your summary here (markdown file) 🚀", expanded=True):
                 st.markdown("""
                 <div style="background: linear-gradient(135deg, rgba(248, 250, 252, 0.8) 0%, rgba(226, 232, 240, 0.6) 100%); border-left: 4px solid #3b82f6; border-radius: 8px; padding: 15px 20px; margin-bottom: 15px;">
                     <h3 style="margin: 0; color: #1e293b; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; font-family: Arahoni, serif;">
